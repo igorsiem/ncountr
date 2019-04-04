@@ -60,11 +60,12 @@ int main(int argc, char *argv[])
                 logging::level_t::info
                 , L"API version {}"_format(api::wversion()));
 
-            QApplication a(argc, argv);
-            MainWindow w;
-            w.show();
+            QApplication app(argc, argv);
+            QSettings settings("Igor Siemienowicz", "nCountr");
+            MainWindow main_win(vm, settings);
+            main_win.show();
 
-            result = a.exec();
+            result = app.exec();
 
         }   // end if we want to run the application
 
