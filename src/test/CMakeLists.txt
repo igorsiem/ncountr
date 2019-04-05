@@ -8,8 +8,8 @@
 file (GLOB_RECURSE TEST_SRC *.cpp)
 add_executable(test-$ENV{QPRJ_PROJECT_NAME} ${TEST_SRC})
 target_link_libraries(test-$ENV{QPRJ_PROJECT_NAME}
-    ${CONAN_LIBS}
     $ENV{QPRJ_PROJECT_NAME}-api
-    Qt5::Sql
     sqlite-datastore
+    ${CONAN_LIBS}
+    Qt5::Sql
 )

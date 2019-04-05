@@ -10,6 +10,8 @@ project($ENV{QPRJ_PROJECT_NAME} LANGUAGES CXX)
 # set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Using conan for dependencies
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
