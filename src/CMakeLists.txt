@@ -16,6 +16,14 @@ conan_basic_setup()
 
 add_definitions(${CONAN_DEFINES})
 
+# Qt stuff
+find_package(Qt5 REQUIRED COMPONENTS
+    Core
+    Gui
+    Sql
+    Widgets
+)
+
 # Note that qlib is an external dependency of this project. It is expected
 # be in the same directory as this checkout. At some point, qLib should be
 # packaged for conan as well.
@@ -23,9 +31,11 @@ add_definitions(${CONAN_DEFINES})
 include_directories(
     .
     ../..
+    ${CONAN_INCLUDE_DIRS_QT}/QtSql
     ${CONAN_INCLUDE_DIRS_QT}/QtWidgets
 )
 
 add_subdirectory(api)
 add_subdirectory(gui)
+add_subdirectory(sqlite_datastore)
 add_subdirectory(test)

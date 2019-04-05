@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
             logging::logger().log(
                 logging::level_t::info
-                , L"API version {}"_format(api::wversion()));
+                , L"API version {}"_format(ncountr::api::wversion()));
 
             QApplication app(argc, argv);
             QSettings settings("Igor Siemienowicz", "nCountr");

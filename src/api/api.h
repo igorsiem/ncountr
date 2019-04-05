@@ -10,9 +10,15 @@
  */
 
 #include <string>
+#include "datastore.h"
 
 #ifndef _api_api_h_included
 #define _api_api_h_included
+
+/**
+ * \brief Declarations related to core nCountr functionality
+ */
+namespace ncountr {
 
 /**
  * Declarations for the Application Programming Interface to the core logic
@@ -29,6 +35,6 @@ extern std::string version(void);
  */
 extern std::wstring wversion(void);
 
-}   // end api namespace
+}}   // end ncountr::api namespace
 
 #endif

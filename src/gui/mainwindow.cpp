@@ -65,5 +65,5 @@ void MainWindow::setupUi(void)
     ui->centralWidget->layout()->addWidget(
         new QLabel(
             QString::fromStdString(
-                "API version: {}"_format(api::version()))));
+                "API version: {}"_format(ncountr::api::version()))));
 }   // end setupUi method

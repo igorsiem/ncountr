@@ -12,11 +12,11 @@
 #include <qlib/qlib.h>
 #include "api.h"
 
-namespace api {
+namespace ncountr { namespace api {
 
 std::string version(void)
 {
-    return "0.0";
+    return "0.1";
 }
 
 std::wstring wversion(void)
@@ -24,4 +24,4 @@ std::wstring wversion(void)
     return boost::lexical_cast<std::wstring>(version());
 }
 
-}   // end api namespace
+}}   // end ncountr::api namespace

@@ -62,11 +62,6 @@ task :bin => :cmake do
     Dir.chdir ".."
 end
 
-desc "run test suite"
-task :test => :bin do
-    sh "build/bin/test-#{$project_name}"
-end
-
 # Retrieve the location of Qt from conan
 def get_qt_location
     cmd_str = "conan info qt/5.12.2@bincrafters/stable " +
@@ -86,6 +81,19 @@ end
 if !Rake::Win32::windows?
     ENV['QT_PLUGIN_PATH'] = "#{get_qt_location}/plugins"
     # puts "set QT_PLUGIN_PATH to #{ENV['QT_PLUGIN_PATH']}"
+end
+
+directory "test-output"
+
+namespace :clean do
+    task :test => "test-output" do
+        FileUtils.rm_rf Dir.glob("test-output/*")
+    end
+end
+
+desc "run test suite"
+task :test => [:bin, "clean:test"] do
+    sh "build/bin/test-#{$project_name}"
 end
 
 desc "run the application"

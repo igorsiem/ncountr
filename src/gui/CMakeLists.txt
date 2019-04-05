@@ -9,8 +9,6 @@
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5Widgets)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 file(GLOB UI_FILES "*.ui")
@@ -20,9 +18,10 @@ qt5_wrap_ui(UI_HEADERS ${UI_FILES})
 file (GLOB_RECURSE GUI_SRC *.cpp *.rc *.qrc)
 add_executable($ENV{QPRJ_PROJECT_NAME}-gui ${GUI_SRC} ${UI_HEADERS})
 target_link_libraries($ENV{QPRJ_PROJECT_NAME}-gui
-    Qt5::Widgets
     ${CONAN_LIBS}
     $ENV{QPRJ_PROJECT_NAME}-api
+    Qt5::Sql
+    Qt5::Widgets
 )
 
 # If we're running under windows, we need the Qt DLLs with our GUI executable
