@@ -10,6 +10,7 @@
  */
 
 #include <QApplication>
+#include <QImageReader>
 
 #include <fmt/format.h>
 using namespace fmt::literals;
@@ -56,11 +57,21 @@ int main(int argc, char *argv[])
                 logging::level_t::info
                 , L"application starting");
 
+            QApplication app(argc, argv);
+
             logging::logger().log(
                 logging::level_t::info
                 , L"API version {}"_format(ncountr::api::wversion()));
 
-            QApplication app(argc, argv);
+///            logging::logger().log(
+///                logging::level_t::debug, L"supported image formats:");
+///            for (auto& fmt : QImageReader::supportedImageFormats())
+///            {
+///                logging::logger().log(
+///                    logging::level_t::debug
+///                    , "    "_format(fmt.toStdString()));
+///            }
+
             QSettings settings("Igor Siemienowicz", "nCountr");
             MainWindow main_win(vm, settings);
             main_win.show();

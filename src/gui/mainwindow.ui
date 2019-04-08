@@ -15,11 +15,6 @@
   </property>
   <widget class="QWidget" name="centralWidget"/>
 
-  <!--
-
-    NOTE: We add window elements like toolbars and status bars
-    'programmatically'
-
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -39,7 +34,6 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar" />
-  -->
   
  </widget>
  <layoutdefault spacing="6" margin="11"/>

@@ -12,8 +12,8 @@
 #ifndef _gui_mainwindow_h_installed
 #define _gui_mainwindow_h_installed
 
-#include <QSettings>
 #include <QMainWindow>
+#include <QSettings>
 
 #include "config.h"
 
@@ -81,6 +81,62 @@ class MainWindow : public QMainWindow
      * This method is called from the constructor.
      */
     void setupUi(void);
+
+    /**
+     * \brief Set up User actions for the application, and connect them to
+     * the GUI
+     * 
+     * User actions are best visualised as a menu tree, even though many of
+     * them will be accessed via the Tool Bar.
+     * 
+     * * File menu:
+     *   - New File action
+     *   - Open File action
+     *   - Close File action
+     *   - Exit Application action
+     * 
+     * \todo Add more actions
+     */
+    void setupCommandTree(void);
+
+    /**
+     * \brief Set up the User actions associated with file-related
+     * functionality, along with associated menu items and tool bar buttons
+     */
+    void setupFileActions(void);
+
+    // -- User Command Execution --
+
+    /**
+     * \brief Allow the User to create a new nCountr file, closing any file
+     * that may currently be open
+     * 
+     * This method is called when the "New File" action is invoked.
+     */
+    void executeFileNewFile(void);
+
+    /**
+     * \brief Allow the User to choose and open an nCountr file, closing
+     * any file that may currently be open
+     * 
+     * This method is called when the "Open File" action is invoked.
+     */
+    void executeFileOpenFile(void);
+
+    /**
+     * \brief Close the currently open nCountr file
+     * 
+     * This method is called when the User invoked the "Close File" action.
+     */
+    void executeFileCloseFile(void);
+
+    /**
+     * \brief Close the main window and exit the application
+     * 
+     * This is method is called when the User chooses "Exit Application"
+     * action is invoked by the User.
+     */
+    void executeFileExitApplication(void);
 
     // -- Attributes --
 

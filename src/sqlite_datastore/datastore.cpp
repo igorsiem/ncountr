@@ -17,7 +17,17 @@ using namespace fmt::literals;
 
 namespace ncountr { namespace datastores { namespace sqlite {
 
+/**
+ * \brief Convenient alias for the logger level enumerator type
+ */
 using level_t = qlib::logger::level_t;
+
+/**
+ * \brief Convenience method for retrieving a reference to the single logger
+ * instance
+ * 
+ * \return A reference to the logging singleton
+ */
 inline qlib::logger& logger(void) { return qlib::logger::instance(); }
 
 datastore::datastore(QString filePath) :

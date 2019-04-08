@@ -1,5 +1,5 @@
 /**
- * \file datastore.h
+ * \file sqlite_datastore/datastore.h
  * Declare the `sqlite::datastore` class
  * 
  * \author Igor Siemienowicz
@@ -11,7 +11,6 @@
 
 #include <boost/optional.hpp>
 #include <QSqlDatabase>
-///#include <QString>
 #include "../api/api.h"
 
 #ifndef _sqlite_datastore_h_included
@@ -19,6 +18,9 @@
 
 namespace ncountr { namespace datastores { namespace sqlite {
 
+/**
+ * \brief SQLite implementation of the `api::datastore` interface
+ */
 class datastore : public api::datastore
 {
 

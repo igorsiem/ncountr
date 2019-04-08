@@ -9,6 +9,7 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
+#include <qlib/qlib.h>
 #include "config.h"
 
 #ifndef _gui_logging_h_included

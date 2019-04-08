@@ -1,5 +1,5 @@
 /**
- * \file datastore.h
+ * \file api/datastore.h
  * Declare the `datastore` interface
  * 
  * \author Igor Siemienowicz
