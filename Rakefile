@@ -62,10 +62,10 @@ task :bin => :cmake do
     Dir.chdir ".."
 end
 
-# Retrieve the location of Qt from conan
-def get_qt_location
-    cmd_str = "conan info qt/5.12.2@bincrafters/stable " +
-        "--package-filter \"qt*\" " +
+# Retrieve the location of a package path from conan
+def get_conan_package_location(package)
+    cmd_str = "conan info #{package} " +
+        "--package-filter \"#{package.to_s}*\" " +
         "--paths --only package_folder " +
         ""
 
@@ -74,6 +74,25 @@ def get_qt_location
     resp_str.lines.each do |line|
         return line.split(": ")[1].strip if line.include?("package_folder")
     end
+end
+
+# Retrieve the location of Qt from conan
+def get_qt_location
+    get_conan_package_location("qt/5.12.2@bincrafters/stable")
+end
+
+namespace :path do
+
+    task :fmt do
+        puts "fmt package location: " +
+            "#{get_conan_package_location("fmt/5.3.0@bincrafters/stable")}"
+    end
+
+    task :qt do
+        puts "Qt package location: " +
+            "#{get_conan_package_location("qt/5.12.2@bincrafters/stable")}"
+    end
+
 end
 
 # When in *nix, need to set the Qt plugin path to the conan installation
