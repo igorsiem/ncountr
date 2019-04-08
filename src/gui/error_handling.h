@@ -44,7 +44,7 @@
             actionDesc, \
             err.message()); \
     } \
-    catch (const QException& err) \
+    catch (const QException&) \
     { \
         QString msg("an unrecognised Qt exception was encountered"); \
         logging::logger().log(logging::level_t::error, \
