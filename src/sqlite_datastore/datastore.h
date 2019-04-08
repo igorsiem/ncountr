@@ -37,7 +37,9 @@ class datastore : public api::datastore
      */
     explicit datastore(QString filePath);
 
+    // Default virtual destructor, and disable copy / move semantics
     DECLARE_DEFAULT_VIRTUAL_DESTRUCTOR(datastore)
+    DECLARE_NO_MOVE_AND_COPY_SEMANTICS(datastore)
 
     /**
      * \brief Determine whether or not the storage is ready for use

@@ -11,6 +11,7 @@
 
 #include <QException>
 #include <QMessageBox>
+#include "error.h"
 #include "logging.h"
 
 #ifndef _gui_error_handling_h_included
@@ -26,16 +27,26 @@
 /**
  * \brief The end of the top-level try / catch block
  * 
- * This macro catches all exceptions, and displays an appropriate error
- * MessageBox, with the given action description.
+ * This macro catches all exceptions, extracting any information that is
+ * available, and displays an appropriate error MessageBox, with the given
+ * action description.
  * 
  * \param actionDesc A string describing the action that was being attempted
  * when the error occurred; this is often the same as the menu text
  */
 #define ACTION_CATCH_DURING( actionDesc ) \
+    catch (const ::Error& err) \
+    { \
+        logging::logger().log(logging::level_t::error, \
+            (QString(actionDesc) + " - " + err.message()).toStdWString()); \
+        QMessageBox::critical( \
+            this, \
+            actionDesc, \
+            err.message()); \
+    } \
     catch (const QException& err) \
     { \
-        QString msg(err.what()); \
+        QString msg("an unrecognised Qt exception was encountered"); \
         logging::logger().log(logging::level_t::error, \
             (QString(actionDesc) + " - " + msg).toStdWString()); \
         QMessageBox::critical( \
@@ -65,4 +76,4 @@
             msg); \
     }
 
-    #endif
+#endif

@@ -83,6 +83,16 @@ end
 
 namespace :path do
 
+    task :boost do
+        puts "boost package location: " +
+            "#{get_conan_package_location("boost/1.69.0@conan/stable")}"
+    end
+
+    task :catch2 do
+        puts "catch2 package location: " +
+            "#{get_conan_package_location("Catch2/2.7.0@catchorg/stable")}"
+    end
+
     task :fmt do
         puts "fmt package location: " +
             "#{get_conan_package_location("fmt/5.3.0@bincrafters/stable")}"

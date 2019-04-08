@@ -9,6 +9,7 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
+#include <memory>
 #include <qlib/qlib.h>
 
 #ifndef _api_datastore_h_included
@@ -38,6 +39,11 @@ class datastore
     virtual bool is_ready(void) const = 0;
 
 };  // end datastore class
+
+/**
+ * \brief A unique pointer to a datastore object
+ */
+using datastore_upr = std::unique_ptr<datastore>;
 
 }}  // end api namespace
 

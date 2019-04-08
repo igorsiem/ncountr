@@ -63,15 +63,6 @@ int main(int argc, char *argv[])
                 logging::level_t::info
                 , L"API version {}"_format(ncountr::api::wversion()));
 
-///            logging::logger().log(
-///                logging::level_t::debug, L"supported image formats:");
-///            for (auto& fmt : QImageReader::supportedImageFormats())
-///            {
-///                logging::logger().log(
-///                    logging::level_t::debug
-///                    , "    "_format(fmt.toStdString()));
-///            }
-
             QSettings settings("Igor Siemienowicz", "nCountr");
             MainWindow main_win(vm, settings);
             main_win.show();

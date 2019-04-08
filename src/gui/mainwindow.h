@@ -9,13 +9,13 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
-#ifndef _gui_mainwindow_h_installed
-#define _gui_mainwindow_h_installed
-
 #include <QMainWindow>
 #include <QSettings>
 
 #include "config.h"
+
+#ifndef _gui_mainwindow_h_installed
+#define _gui_mainwindow_h_installed
 
 /**
  * Qt framework generated user interface classes
