@@ -13,6 +13,7 @@
 #include <QSettings>
 
 #include "config.h"
+#include "document.h"
 
 #ifndef _gui_mainwindow_h_installed
 #define _gui_mainwindow_h_installed
@@ -71,9 +72,9 @@ class MainWindow : public QMainWindow
      */
     virtual void closeEvent(QCloseEvent *event) override;
 
-    // -- Internal Helper Methods --
-
     private:
+
+    // -- UI Setup --
 
     /**
      * \brief Set up all user interface elements
@@ -138,6 +139,52 @@ class MainWindow : public QMainWindow
      */
     void executeFileExitApplication(void);
 
+    // -- Internal Helper Methods --
+
+    /**
+     * \brief Retrieve the directory last used with a Document file from
+     * persistent settings storage
+     * 
+     * Note that if a directory has not previously been set, the standard
+     * (system dependent), location for Documents is used.
+     */
+    QString lastDocumentDirectoryUsed(void);
+
+    /**
+     * \brief Save the path to the last directory used with Document file to
+     * persistent settings storage
+     * 
+     * \param The directory path to set and save
+     */
+    void setLastDocumentDirectoryUsed(const QString& lastDirUsed);
+
+    /**
+     * \brief Retrieve the path of the last Document file created or opened
+     * from persistent settings storage
+     * 
+     * \return The path of the last file used, or an empty string if the
+     * info is not recorded; note that the actual file may -- or may not --
+     * exist
+     */
+    QString lastDocumentFileUsed(void);
+
+    /**
+     * \brief Save the path of the last Document file used in persistent
+     * settings storage.
+     * 
+     * This method is called when a Document file is opened or created.
+     * 
+     * \param filePath The path of the Document file
+     */
+    void setLastDocumentFileUsed(const QString& filePath);
+
+    void setWindowTitleMessage(const QString& msg = "")
+    {
+        QString title = "nCountr";
+        if (!msg.isEmpty()) title += " - " + msg;
+        setWindowTitle(title);
+    }
+
     // -- Attributes --
 
     private:
@@ -156,6 +203,11 @@ class MainWindow : public QMainWindow
      * \brief Persistent user settings for the application
      */
     QSettings& m_settings;
+
+    /**
+     * \brief The currently open document (when non-null)
+     */
+    DocumentUpr m_document;
 
 };  // end MainWindow class
 

@@ -10,10 +10,13 @@
  */
 
 #include <memory>
-#include <QString>
+#include <QCoreApplication>
 #include <QException>
+#include <QString>
+
 #include <qlib/qlib.h>
 #include <api/api.h>
+
 #include "error.h"
 
 #ifndef _gui_document_h_installed
@@ -77,10 +80,16 @@ class Document final
      * 
      * \return A unique pointer to the new Datastore object
      * 
-     * \throw Document::Error There are a problem opening the Datatore, or
+     * \throw Document::Error There are a problem opening the Datastore, or
      * creating the Document object
      */
-    static DocumentUpr makeSqliteDocument(QString filePath);    
+    static DocumentUpr makeSqliteDocument(QString filePath);
+
+    /**
+     * \brief Suffix (extension) used for Sqlite Datastore Document file
+     * names
+     */
+    static QString sqliteFileNameSuffix(void) { return QString("ncountr"); }
 
     // --- Internal Declarations ---
 

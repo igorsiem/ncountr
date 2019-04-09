@@ -10,8 +10,10 @@
  */
 
 #include <QAction>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QStandardPaths>
 
 #include <fmt/format.h>
 using namespace fmt::literals;
@@ -27,9 +29,10 @@ MainWindow::MainWindow(
         , QSettings& settings
         , QWidget *parent) :
     QMainWindow(parent)
+    , ui(new Ui::MainWindow)
     , m_command_line_options(clo)
     , m_settings(settings)
-    , ui(new Ui::MainWindow)
+    , m_document(nullptr)
 {
     setupUi();
 }   // end constructor
@@ -62,14 +65,9 @@ void MainWindow::setupUi(void)
     restoreState(m_settings.value("state").toByteArray());
     m_settings.endGroup();
 
-///    // Add a label for the API version
-///    ui->centralWidget->setLayout(new QHBoxLayout(ui->centralWidget));
-///    ui->centralWidget->layout()->addWidget(
-///        new QLabel(
-///            QString::fromStdString(
-///                "API version: {}"_format(ncountr::api::version()))));
-
     setupCommandTree();
+
+    setWindowTitleMessage();
 
 }   // end setupUi method
 
@@ -127,7 +125,51 @@ void MainWindow::executeFileNewFile(void)
 {
     ACTION_TRY
     {
-        throw std::runtime_error("this action is not implemented yet");
+
+        QString filePath = QFileDialog::getSaveFileName(
+            this
+            , tr("New nCountr File")
+            , lastDocumentDirectoryUsed()
+            , tr("nCountr Files (*.ncountr);;All files (*.*)"));
+
+        if (!filePath.isEmpty())
+        {
+
+            // Check our file name suffix, and also make sure we save the
+            // document location for next time.
+            //
+            // If no file name suffix has been supplied, add our standard
+            // one.
+            QString suffix = QFileInfo(filePath).suffix();
+            if (suffix.isEmpty())
+                filePath += "." + Document::sqliteFileNameSuffix();
+
+            QFileInfo fi(filePath);
+            setLastDocumentDirectoryUsed(fi.absolutePath());
+
+            // Can create the file now - if there is was a Document open
+            // before, we assume it will be closed cleanly by destructors.
+            m_document = std::move(Document::makeSqliteDocument(filePath));
+
+            // Remember the path of the file for next time
+            setLastDocumentFileUsed(filePath);
+
+            QString msg = QString::fromStdWString(
+                L"created \"{}.{}\" in \"{}\""_format(
+                    fi.baseName().toStdWString()
+                    , fi.suffix().toStdWString()
+                    , fi.absolutePath().toStdWString()));
+
+            logging::logger().log(
+                logging::level_t::debug
+                , msg.toStdWString());
+
+            ui->statusBar->showMessage(msg, 5000);
+
+            setWindowTitleMessage(fi.baseName());
+
+        }   // end if the chosen file path is not empty
+        
     }
     ACTION_CATCH_DURING("New File")
 }   // end executeFileNewFile
@@ -159,3 +201,40 @@ void MainWindow::executeFileExitApplication(void)
     }
     ACTION_CATCH_DURING("Exit Application")
 }   // end executeFileExitApplication
+
+QString MainWindow::lastDocumentDirectoryUsed(void)
+{
+    QString p;
+    m_settings.beginGroup("fileLocations");
+    p = m_settings.value(
+        "lastDocumentDirectoryUsed"
+        , QStandardPaths::writableLocation(
+            QStandardPaths::DocumentsLocation)).toString();
+    m_settings.endGroup();
+
+    return p;
+}   // end getLastDocumentDirectoryUsed method
+
+void MainWindow::setLastDocumentDirectoryUsed(const QString& lastDirUsed)
+{
+    m_settings.beginGroup("fileLocations");
+    m_settings.setValue("lastDocumentDirectoryUsed", lastDirUsed);
+    m_settings.endGroup();    
+}   // end setLastDocumentDirectoryUsed method
+
+QString MainWindow::lastDocumentFileUsed(void)
+{
+    QString p;
+    m_settings.beginGroup("fileLocations");
+    p = m_settings.value("lastDocumentFileUsed").toString();
+    m_settings.endGroup();
+
+    return p;
+}   // end lastDocumentFileUsed method
+
+void MainWindow::setLastDocumentFileUsed(const QString& filePath)
+{
+    m_settings.beginGroup("fileLocations");
+    m_settings.setValue("lastDocumentFileUsed", filePath);
+    m_settings.endGroup();    
+}   // end setLastDocumentFileUsed method

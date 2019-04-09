@@ -18,7 +18,7 @@ TEST_CASE("sqlite datastore", "[unit]")
 
     // qlib::logger::instance().set_for_console();
 
-    QString dbFilePath = "test-output/sqlite_datastore-test.db";
+    QString dbFilePath = "test-output/sqlite_datastore-test.ncountr";
 
     // Open the database, and check that it is ready for action.
     auto db = std::make_unique<ncountr::datastores::sqlite::datastore>(
