@@ -126,26 +126,41 @@ void MainWindow::executeFileNewFile(void)
     ACTION_TRY
     {
 
-        QString filePath = QFileDialog::getSaveFileName(
+        // Need to use a QFileDialog object instead of an ordinary static
+        // method to give us finer control over file selection.
+        QFileDialog dlg(
             this
             , tr("New nCountr File")
             , lastDocumentDirectoryUsed()
             , tr("nCountr Files (*.ncountr);;All files (*.*)"));
 
-        if (!filePath.isEmpty())
+        dlg.setAcceptMode(QFileDialog::AcceptSave);
+        dlg.setDefaultSuffix(Document::sqliteFileNameSuffix());
+
+        if (dlg.exec() == QDialog::Accepted)
         {
 
-            // Check our file name suffix, and also make sure we save the
-            // document location for next time.
-            //
-            // If no file name suffix has been supplied, add our standard
-            // one.
-            QString suffix = QFileInfo(filePath).suffix();
-            if (suffix.isEmpty())
-                filePath += "." + Document::sqliteFileNameSuffix();
-
+            auto selectedFiles = dlg.selectedFiles();
+            QString filePath = dlg.selectedFiles()[0];
+            
+            // Make sure we save the document location for next time.
             QFileInfo fi(filePath);
             setLastDocumentDirectoryUsed(fi.absolutePath());
+
+            // If the file exists (User will have already confirmed the
+            // overwrite), we need to delete the existing file so that
+            // Sqlite doesn't just open the existing file.
+            if (fi.exists())
+            {
+                if (QFile(filePath).remove())
+                    logging::logger().log(
+                        logging::level_t::debug
+                        , L"file \"{}\" exists, so it was deleted before "
+                            "creating the new doucment"_format(
+                                filePath.toStdWString()));
+                else Document::Error(tr("file already exists, and could "
+                    "not be deleted - ") + filePath).raise();
+            }
 
             // Can create the file now - if there is was a Document open
             // before, we assume it will be closed cleanly by destructors.

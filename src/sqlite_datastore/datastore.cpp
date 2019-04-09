@@ -41,16 +41,16 @@ datastore::datastore(QString filePath) :
 {
     // Use the file path as a 
     m_db = QSqlDatabase::addDatabase("QSQLITE", m_filePath);
-    m_db->setDatabaseName(filePath);
+    m_db->setDatabaseName(m_filePath);
 
     if (m_db->open())
-        logger().log(level_t::debug, L"opened database \"{}\""_format(
+        logger().log(level_t::debug, L"database {} created / opened"_format(
             m_filePath.toStdWString()));
     else
     {
         m_db = boost::none;
-        logger().log(level_t::error, L"could not open database "
-            "\"{}\""_format(m_filePath.toStdWString()));
+        logger().log(level_t::error, L"could not open database {}"_format(
+            m_filePath.toStdWString()));
     }
 }   // end constructor
 

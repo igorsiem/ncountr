@@ -27,6 +27,10 @@ namespace Ui {
 
 /**
  * \brief The main window of the application
+ * 
+ * \todo Additional overview information
+ * 
+ * \todo Doc page on nCountr document files (somewhere)
  */
 class MainWindow : public QMainWindow
 {
@@ -113,6 +117,15 @@ class MainWindow : public QMainWindow
      * that may currently be open
      * 
      * This method is called when the "New File" action is invoked.
+     * 
+     * Note that the logic of this involves choosing a file name / path
+     * for the document immediately. This is because Documents are based on
+     * Sqlite databases (at the moment), and so need a file straight away.
+     * This means that a "Save File" dialog is opened, and we need logic for
+     * checking whether chosen file paths already exist, and need to be
+     * overwritten.
+     * 
+     * On the plus side, there's not need to save Documents before closing.
      */
     void executeFileNewFile(void);
 
