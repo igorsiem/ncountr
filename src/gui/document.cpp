@@ -20,11 +20,11 @@ Document::Document(ncountr::api::datastore_upr datastore) :
 
 DocumentUpr Document::makeSqliteDocument(QString filePath)
 {
-    auto db = std::make_unique<ncountr::datastores::sqlite::datastore>(
+    auto ds = std::make_unique<ncountr::datastores::sqlite::datastore>(
         filePath);
-    if (!db->is_ready())
+    if (!ds->is_ready())
         Document::Error(tr("could not open datastore at \"") + filePath +
             "\"").raise();
 
-    return std::make_unique<Document>(std::move(db));
+    return std::make_unique<Document>(std::move(ds));
 }   // end makeSqliteDocument

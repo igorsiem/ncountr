@@ -37,8 +37,12 @@ class datastore : public api::datastore
      */
     explicit datastore(QString filePath);
 
+    /**
+     * \brief Destructor - shuts down the database connection
+     */
+    virtual ~datastore(void);
+
     // Default virtual destructor, and disable copy / move semantics
-    DECLARE_DEFAULT_VIRTUAL_DESTRUCTOR(datastore)
     DECLARE_NO_MOVE_AND_COPY_SEMANTICS(datastore)
 
     /**
@@ -56,8 +60,10 @@ class datastore : public api::datastore
 
     private:
 
+    QString m_filePath;                 ///< Path of the database file
+
     boost::optional<QSqlDatabase> m_db; ///< Database connection
-    
+
 };  // end datastore class
 
 }}}  // end ncountr::datastores::sqlite namespace

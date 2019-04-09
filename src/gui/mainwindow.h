@@ -178,6 +178,15 @@ class MainWindow : public QMainWindow
      */
     void setLastDocumentFileUsed(const QString& filePath);
 
+    /**
+     * \brief Add a message (possibly blank) to the Window title
+     * 
+     * This method is intended for adding something long-term and basic to
+     * the title of the Main Window (like the name of the file that is
+     * currently open)
+     * 
+     * \param msg The message to add to the window title
+     */
     void setWindowTitleMessage(const QString& msg = "")
     {
         QString title = "nCountr";

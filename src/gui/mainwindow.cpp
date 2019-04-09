@@ -149,16 +149,17 @@ void MainWindow::executeFileNewFile(void)
 
             // Can create the file now - if there is was a Document open
             // before, we assume it will be closed cleanly by destructors.
+            //
+            // Note that we have to explicitly release the database before
+            // recreating it, so that connections are cleaned up before new
+            // ones are created.
+            m_document = nullptr;
             m_document = std::move(Document::makeSqliteDocument(filePath));
 
             // Remember the path of the file for next time
             setLastDocumentFileUsed(filePath);
 
-            QString msg = QString::fromStdWString(
-                L"created \"{}.{}\" in \"{}\""_format(
-                    fi.baseName().toStdWString()
-                    , fi.suffix().toStdWString()
-                    , fi.absolutePath().toStdWString()));
+            QString msg = tr("created document ") + filePath;
 
             logging::logger().log(
                 logging::level_t::debug
@@ -167,6 +168,8 @@ void MainWindow::executeFileNewFile(void)
             ui->statusBar->showMessage(msg, 5000);
 
             setWindowTitleMessage(fi.baseName());
+
+            // TODO set up other UI elements
 
         }   // end if the chosen file path is not empty
         
@@ -178,7 +181,54 @@ void MainWindow::executeFileOpenFile(void)
 {
     ACTION_TRY
     {
-        throw std::runtime_error("this action is not implemented yet");
+
+        QString filePath = QFileDialog::getOpenFileName(
+            this
+            , tr("Open nCountr File")
+            , lastDocumentDirectoryUsed()
+            , tr("nCountr Files (*.ncountr);;All files (*.*)"));
+
+        if (!filePath.isEmpty())
+        {
+
+            // Save the folder location for next time
+            QFileInfo fi(filePath);
+            setLastDocumentDirectoryUsed(fi.absolutePath());
+
+            // Check that the file exists, and is a file.
+            if (!fi.exists())
+                Document::Error(tr("file does not exist - ") +
+                    filePath).raise();
+
+            if (!fi.isFile())
+                Document::Error(tr("selected path is not a file (probably a "
+                    "directory) - ")  + filePath).raise();
+
+            // Open the file - any existing document will be closed cleanly
+            // by destructors (we assume)
+            //
+            // Note that we have to explicitly release the database before
+            // recreating it, so that connections are cleaned up before new
+            // ones are created.
+            m_document = nullptr;
+            m_document = std::move(Document::makeSqliteDocument(filePath));
+
+            // Remember the path of the file for next time
+            setLastDocumentFileUsed(filePath);
+
+            QString msg = tr("opened document ") + filePath;
+            logging::logger().log(
+                logging::level_t::debug
+                , msg.toStdWString());
+
+            ui->statusBar->showMessage(msg, 5000);
+
+            setWindowTitleMessage(fi.baseName());
+
+            // TODO set up other UI elements
+
+        }   // end if a file name was selected
+
     }
     ACTION_CATCH_DURING("Open File")
 }   // end executeFileOpenFile
@@ -187,7 +237,20 @@ void MainWindow::executeFileCloseFile(void)
 {
     ACTION_TRY
     {
-        throw std::runtime_error("this action is not implemented yet");
+
+        m_document = nullptr;
+        QString msg = tr("document closed");
+
+        logging::logger().log(
+            logging::level_t::debug
+            , msg.toStdWString());
+
+        ui->statusBar->showMessage(msg, 5000);
+
+        setWindowTitleMessage();
+
+        // TODO clear other UI elements
+
     }
     ACTION_CATCH_DURING("Close File")
 }   // end executeFileCloseFile
