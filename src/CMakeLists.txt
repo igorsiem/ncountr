@@ -33,6 +33,7 @@ find_package(Qt5 REQUIRED COMPONENTS
 include_directories(
     .
     ../..
+    ${CONAN_INCLUDE_DIRS_QT}/QtCore
     ${CONAN_INCLUDE_DIRS_QT}/QtSql
     ${CONAN_INCLUDE_DIRS_QT}/QtWidgets
 )

@@ -10,6 +10,7 @@
  */
 
 #include <memory>
+
 #include <QCoreApplication>
 #include <QException>
 #include <QString>
@@ -23,8 +24,12 @@
 #define _gui_document_h_installed
 
 /**
- * \brief Class for encapsulating the datastore and asssociated types into
- * the concept of an editable 'document'
+ * \brief Class for encapsulating a datastore and asssociated types into
+ * the concept of an editable 'Document'
+ * 
+ * A Document is GUI-level concept that acts as a (relatively thin) wrapper
+ * for the API-level Datastore. See the \ref datastores page for more
+ * information on the Datastore class hierarchy.
  * 
  * \todo Expand documentation
  */

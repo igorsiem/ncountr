@@ -18,14 +18,28 @@ TEST_CASE("sqlite datastore", "[unit]")
 
     // qlib::logger::instance().set_for_console();
 
-    QString dbFilePath = "test-output/sqlite_datastore-test.ncountr";
 
-    // Open the database, and check that it is ready for action.
-    auto db = std::make_unique<ncountr::datastores::sqlite::datastore>(
-        dbFilePath);
-    REQUIRE(db->is_ready());
+    // Open the Datastore, and check that it is ready for action, and
+    // initialise it.
+    QString dbFilePath = "test-output/sqlite_datastore-test.db";
+    auto ds =
+        std::make_unique<ncountr::datastores::sqlite::datastore>(dbFilePath);
+
+    REQUIRE(ds->is_ready());
+
+    REQUIRE_NOTHROW(ds->initialise());
+
+    // We can record and retrieve basic document info
+    REQUIRE_NOTHROW(ds->set_name(L"Datastore name"));
+    REQUIRE_NOTHROW(ds->set_description(L"Datastore description"));
+
+    REQUIRE(ds->name() == L"Datastore name");
+    REQUIRE(ds->description() == L"Datastore description");
+
+    // Explicitly delete the Datastore so that we can verify that no
+    // exceptions are thrown.
+    REQUIRE_NOTHROW(ds = nullptr);
 
     // qlib::logger::instance().clear();
 
-///    FAIL("tests are incomplete");
 }   // end sqlite datastore test

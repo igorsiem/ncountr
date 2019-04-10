@@ -1,6 +1,6 @@
 /**
- * \Implement datastore.cpp
- * Declare the `sqlite::datastore` class
+ * \file datastore.cpp
+ * Implement the `sqlite::datastore` class
  * 
  * \author Igor Siemienowicz
  * 
@@ -9,43 +9,26 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
-#include <fmt/format.h>
-using namespace fmt::literals;
-
 #include <qlib/qlib.h>
 #include "datastore.h"
 
 namespace ncountr { namespace datastores { namespace sqlite {
-
-/**
- * \brief Convenient alias for the logger level enumerator type
- * 
- * \todo Move this to a single logging header for the library
- */
-using level_t = qlib::logger::level_t;
-
-/**
- * \brief Convenience method for retrieving a reference to the single logger
- * instance
- * 
- * \return A reference to the logging singleton
- * 
- * \todo Move this to a single logging header for the library
- */
-inline qlib::logger& logger(void) { return qlib::logger::instance(); }
 
 datastore::datastore(QString filePath) :
     base_t()
     , m_filePath(std::move(filePath))
     , m_db(boost::none)
 {
-    // Use the file path as a 
+    // Use the file path as a connection name, which we can remove when the
+    // object goes down
     m_db = QSqlDatabase::addDatabase("QSQLITE", m_filePath);
     m_db->setDatabaseName(m_filePath);
 
     if (m_db->open())
+    {
         logger().log(level_t::debug, L"database {} created / opened"_format(
             m_filePath.toStdWString()));
+    }
     else
     {
         m_db = boost::none;
@@ -61,5 +44,91 @@ datastore::~datastore(void)
 
     logger().log(level_t::debug, L"closed database and connection");
 }   // end destructor
+
+void datastore::initialise(void)
+{
+    if (m_db == boost::none)
+        throw error(tr("attempted to initialise a Datastore that has not "
+            "been opened successfully"));
+
+    initialise(*m_db);
+}   // end initialise method
+
+std::wstring datastore::name(void) const
+{
+    return retrieveSingleRecordFieldValue<QString>(
+        "document_info"
+        , "name"
+        , "id = 1").toStdWString();
+}   // end name method
+
+void datastore::set_name(std::wstring n)
+{
+    updateSingleRecordFieldValue(
+        "document_info"
+        , "name"
+        , QString::fromStdWString(n)
+        , "id = 1");
+}   // end set_name method
+
+std::wstring datastore::description(void) const
+{
+    return retrieveSingleRecordFieldValue<QString>(
+        "document_info"
+        , "description"
+        , "id = 1").toStdWString();
+}   // end description method
+
+void datastore::set_description(std::wstring d)
+{    
+    updateSingleRecordFieldValue(
+        "document_info"
+        , "description"
+        , QString::fromStdWString(d)
+        , "id = 1");
+}   // end set_description method
+
+void datastore::initialise(QSqlDatabase& db)
+{
+    // Note: assuming database is already totally empty
+    QString queryString = "CREATE TABLE document_info ("
+            "id INTEGER PRIMARY KEY"
+            ", name TEXT"
+            ", description TEXT"
+        ");";
+
+    logger().log(
+        level_t::debug
+        , L"query: {}"_format(queryString.toStdWString()));
+
+    QSqlQuery query(db);
+    if (!query.prepare(queryString))
+        throw error(tr("query preparation error: ") +
+            query.lastError().text());
+
+    if (!query.exec())
+        throw error(tr("query execution error: ") +
+            query.lastError().text());
+
+    queryString = "INSERT INTO document_info (id, name, description)"
+                    " VALUES ("
+                        "1"
+                        ", '<Document Name>'"
+                        ", '<Document Description>');";
+
+    logger().log(
+        level_t::debug
+        , L"query: {}"_format(queryString.toStdWString()));
+    
+    if (!query.prepare(queryString))
+        throw error(tr("query preparation error: ") +
+            query.lastError().text());
+
+    if (!query.exec())
+        throw error(tr("query execution error: ") +
+            query.lastError().text());
+
+    logger().log(level_t::debug, L"new datastore initialised");
+}   // end initialise method
 
 }}}  // end ncountr::datastores::sqlite namespace

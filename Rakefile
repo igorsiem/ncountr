@@ -36,9 +36,10 @@ task :cmake => :conan do
     Dir.chdir "build"
 
     cmake_cmd = "cmake "
+    ###cmake_cmd += "-DCMAKE_BUILD_TYPE=Debug "
     cmake_cmd += "-G \"Visual Studio 15 2017 Win64\" " \
         if Rake::Win32::windows?
-    cmake_cmd += "../src"
+    cmake_cmd += "../src "
 
     sh cmake_cmd
 

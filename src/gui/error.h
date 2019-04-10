@@ -1,5 +1,5 @@
 /**
- * \file error.h
+ * \file gui/error.h
  * Exception base-class, just for use in the GUI
  * 
  * \author Igor Siemienowicz

@@ -10,7 +10,9 @@
  */
 
 #include <string>
+
 #include "datastore.h"
+#include "error.h"
 
 #ifndef _api_api_h_included
 #define _api_api_h_included
