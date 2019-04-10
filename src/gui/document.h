@@ -78,7 +78,7 @@ class Document final
     DECLARE_NO_MOVE_AND_COPY_SEMANTICS(Document)
 
     /**
-     * \brief Create a new Document based on a Sqlite Datastore
+     * \brief Create a new Document object based on a Sqlite Datastore
      * 
      * \param filePath The path of the Datastore object; note that a new
      * Datastore file will be created if it does not already exist.
@@ -95,6 +95,32 @@ class Document final
      * names
      */
     static QString sqliteFileNameSuffix(void) { return QString("ncountr"); }
+
+    // -- Document Information --
+
+    /**
+     * \brief Retrieve the Document Name
+     */
+    QString name(void) const
+        { return QString::fromStdWString(m_datastore->name()); }
+
+    /**
+     *  \brief Set the Document Name
+     */
+    virtual void setName(QString n)
+        { m_datastore->set_name(n.toStdWString()); }
+
+    /**
+     * \brief Retrieve the Document Description
+     */
+    virtual QString description(void) const
+        { return QString::fromStdWString(m_datastore->description()); }
+
+    /**
+     * \brief Set the Document Description string
+     */
+    virtual void setDescription(QString d)
+        { m_datastore->set_description(d.toStdWString()); }
 
     // --- Internal Declarations ---
 

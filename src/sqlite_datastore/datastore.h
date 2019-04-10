@@ -163,6 +163,10 @@ class datastore : public api::datastore
 
     /**
      * \brief Retrieve the version number for the underlying file format
+     * 
+     * Note that this information is not available at the generic
+     * `api::datastore` level. All format version issues must be resolved
+     * at the Sqlite Datastore level.
      */
     int file_format_version(void) const;
 

@@ -87,6 +87,11 @@ class MainWindow : public QMainWindow
      */
     void setupUi(void);
 
+    // - Actions and Commands -
+    //
+    // These methods are implemented in the
+    // `mainwindow/setup_commands_and_actions.cpp` file.
+
     /**
      * \brief Set up User actions for the application, and connect them to
      * the GUI
@@ -111,6 +116,9 @@ class MainWindow : public QMainWindow
     void setupFileActions(void);
 
     // -- User Command Execution --
+    //
+    // Note: these are implemented in the `mainwindow/file_actions.cpp
+    // file
 
     /**
      * \brief Allow the User to create a new nCountr file, closing any file
@@ -147,12 +155,17 @@ class MainWindow : public QMainWindow
     /**
      * \brief Close the main window and exit the application
      * 
-     * This is method is called when the User chooses "Exit Application"
-     * action is invoked by the User.
+     * This method is called when the User chooses "Exit Application" action
+     * is invoked by the User.
      */
     void executeFileExitApplication(void);
 
     // -- Internal Helper Methods --
+
+    // - Document and Path Settings -
+    //
+    // Note - these methods are implemented in the
+    // `mainwindow/doc_and_path_settings.cpp` file
 
     /**
      * \brief Retrieve the directory last used with a Document file from

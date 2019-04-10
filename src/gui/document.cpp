@@ -10,6 +10,7 @@
  */
 
 #include <QCoreApplication>
+#include <QFileInfo>
 #include "sqlite_datastore/datastore.h"
 #include "document.h"
 
@@ -20,11 +21,18 @@ Document::Document(ncountr::api::datastore_upr datastore) :
 
 DocumentUpr Document::makeSqliteDocument(QString filePath)
 {
+    // If the file does not exist, it will be created, and we need to run the
+    // initialisation method after creation.
+    bool init = false;
+    if (!QFileInfo(filePath).exists()) init = true;
+
     auto ds = std::make_unique<ncountr::datastores::sqlite::datastore>(
         filePath);
     if (!ds->is_ready())
         Document::Error(tr("could not open datastore at \"") + filePath +
             "\"").raise();
+
+    if (init) ds->initialise();
 
     return std::make_unique<Document>(std::move(ds));
 }   // end makeSqliteDocument
