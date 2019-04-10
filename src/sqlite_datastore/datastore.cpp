@@ -88,6 +88,14 @@ void datastore::set_description(std::wstring d)
         , "id = 1");
 }   // end set_description method
 
+int datastore::file_format_version(void) const
+{
+    return retrieveSingleRecordFieldValue<int>(
+        "document_info"
+        , "file_format_version"
+        , "id = 1");
+}   // end file_format_version
+
 void datastore::initialise(QSqlDatabase& db)
 {
     // Note: assuming database is already totally empty
@@ -95,6 +103,7 @@ void datastore::initialise(QSqlDatabase& db)
             "id INTEGER PRIMARY KEY"
             ", name TEXT"
             ", description TEXT"
+            ", file_format_version INTEGER"
         ");";
 
     logger().log(
@@ -110,11 +119,16 @@ void datastore::initialise(QSqlDatabase& db)
         throw error(tr("query execution error: ") +
             query.lastError().text());
 
-    queryString = "INSERT INTO document_info (id, name, description)"
-                    " VALUES ("
+    queryString = "INSERT INTO document_info ("
+                        "id"
+                        ", name"
+                        ", description"
+                        ", file_format_version"
+                    ") VALUES ("
                         "1"
                         ", '<Document Name>'"
-                        ", '<Document Description>');";
+                        ", '<Document Description>'"
+                        ", 1);";
 
     logger().log(
         level_t::debug

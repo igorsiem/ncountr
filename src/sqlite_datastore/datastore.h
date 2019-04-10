@@ -161,6 +161,11 @@ class datastore : public api::datastore
      */
     virtual void set_description(std::wstring d);
 
+    /**
+     * \brief Retrieve the version number for the underlying file format
+     */
+    int file_format_version(void) const;
+
     // -- Inernal Helper Functions --
     
     /**

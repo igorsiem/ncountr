@@ -29,6 +29,9 @@ TEST_CASE("sqlite datastore", "[unit]")
 
     REQUIRE_NOTHROW(ds->initialise());
 
+    // File format version is 1 (for now)
+    REQUIRE(ds->file_format_version() == 1);
+
     // We can record and retrieve basic document info
     REQUIRE_NOTHROW(ds->set_name(L"Datastore name"));
     REQUIRE_NOTHROW(ds->set_description(L"Datastore description"));
