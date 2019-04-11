@@ -80,9 +80,13 @@ void MainWindow::executeFileNewFile(void)
                 logging::level_t::debug
                 , msg.toStdWString());
 
+            // Update UI
             ui->statusBar->showMessage(msg, 5000);
-
             setWindowTitleMessage(fi.baseName());
+            m_nameFew->updateFromField();
+            m_nameFew->setCanEdit(true);
+            m_descriptionFew->updateFromField();
+            m_descriptionFew->setCanEdit(true);
 
             // TODO set up other UI elements
 
@@ -136,9 +140,13 @@ void MainWindow::executeFileOpenFile(void)
                 logging::level_t::debug
                 , msg.toStdWString());
 
+            // Update UI
             ui->statusBar->showMessage(msg, 5000);
-
             setWindowTitleMessage(fi.baseName());
+            m_nameFew->updateFromField();
+            m_nameFew->setCanEdit(true);
+            m_descriptionFew->updateFromField();
+            m_descriptionFew->setCanEdit(true);
 
             // TODO set up other UI elements
 
@@ -162,7 +170,12 @@ void MainWindow::executeFileCloseFile(void)
 
         ui->statusBar->showMessage(msg, 5000);
 
+        // Update UI
         setWindowTitleMessage();
+        m_nameFew->updateFromField();
+        m_nameFew->setCanEdit(false);
+        m_descriptionFew->updateFromField();
+        m_descriptionFew->setCanEdit(false);
 
         // TODO clear other UI elements
 
@@ -175,7 +188,6 @@ void MainWindow::executeFileExitApplication(void)
     ACTION_TRY
     {
         close();
-        // throw std::runtime_error("this action is not implemented yet");
     }
     ACTION_CATCH_DURING("Exit Application")
 }   // end executeFileExitApplication

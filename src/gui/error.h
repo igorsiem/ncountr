@@ -10,6 +10,7 @@
  */
 
 #include <QException>
+#include <qlib/qlib.h>
 
 #ifndef _gui_error_h_included
 #define _gui_error_h_included

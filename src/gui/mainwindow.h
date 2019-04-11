@@ -14,6 +14,7 @@
 
 #include "config.h"
 #include "document.h"
+#include "textfieldlineedit.h"
 
 #ifndef _gui_mainwindow_h_installed
 #define _gui_mainwindow_h_installed
@@ -86,6 +87,8 @@ class MainWindow : public QMainWindow
      * This method is called from the constructor.
      */
     void setupUi(void);
+
+    void setupCentralWidget(void);
 
     // - Actions and Commands -
     //
@@ -243,6 +246,11 @@ class MainWindow : public QMainWindow
      * \brief The currently open document (when non-null)
      */
     DocumentUpr m_document;
+
+    // - UI Widgets -
+
+    TextFieldLineEdit* m_nameFew; ///< Edit control for the Documet Name
+    TextFieldLineEdit* m_descriptionFew;  ///< Editing for the Description
 
 };  // end MainWindow class
 

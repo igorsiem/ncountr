@@ -21,6 +21,8 @@ MainWindow::MainWindow(
     , m_command_line_options(clo)
     , m_settings(settings)
     , m_document(nullptr)
+    , m_nameFew(nullptr)
+    , m_descriptionFew(nullptr)
 {
     setupUi();
 }   // end constructor

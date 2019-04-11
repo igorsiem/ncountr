@@ -18,7 +18,6 @@ TEST_CASE("sqlite datastore", "[unit]")
 
     // qlib::logger::instance().set_for_console();
 
-
     // Open the Datastore, and check that it is ready for action, and
     // initialise it.
     QString dbFilePath = "test-output/sqlite_datastore-test.db";
