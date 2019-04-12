@@ -1,0 +1,8 @@
+<!-- Note: we are linked icons as PNG files, rather than SVGs, to avoid
+reliance on additional plugins -->
+<RCC>
+    <qresource>
+        <file alias="new_file">resources/new_file.png</file>
+        <file alias="open_file">resources/open_file.png</file>
+    </qresource>
+</RCC>
