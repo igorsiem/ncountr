@@ -112,8 +112,10 @@ bool TextFieldLineEdit::eventFilter(QObject* obj, QEvent* event)
     if (obj == m_lineEdit && event->type() == QEvent::MouseButtonDblClick)
     {
         onLineEditDoubleClicked();
+        event->accept();
+        return true;
     }
-    else QWidget::eventFilter(obj, event);
+    else return QWidget::eventFilter(obj, event);
 }   // end eventFilter
 
 void TextFieldLineEdit::onLineEditDoubleClicked(void)

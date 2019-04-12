@@ -30,6 +30,8 @@
  * objects (e.g. lambda functions)
  * 
  * \todo Expand documentation here
+ * 
+ * \todo Add interface to detect whether the data has been changed
  */
 class TextFieldLineEdit : public QWidget
 {
