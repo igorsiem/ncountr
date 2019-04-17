@@ -1,6 +1,6 @@
 /**
  * \file api-test.cpp
- * Stub test for the API
+ * Tests for *nCountr* API
  * 
  * \author Igor Siemienowicz
  * 
@@ -13,9 +13,10 @@
 #include <api/api.h>
 
 // simple test for the 'version' API function
-TEST_CASE("version", "unit")
+TEST_CASE("version", "[unit]")
 {
     // ensure that 'version' returns a non-empty string
     REQUIRE(ncountr::api::version().empty() == false);
     REQUIRE(ncountr::api::wversion().empty() == false);
-}
+}   // end version test
+

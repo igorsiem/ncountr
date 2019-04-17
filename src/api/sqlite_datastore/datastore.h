@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 
 #include <QCoreApplication>
+#include <QDate>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -21,29 +22,15 @@
 #include <fmt/format.h>
 using namespace fmt::literals;
 
-#include "../api/api.h"
+#include "../api.h"
+
+#include "db_utils.h"
+#include "logging.h"
 
 #ifndef _sqlite_datastore_h_included
 #define _sqlite_datastore_h_included
 
 namespace ncountr { namespace datastores { namespace sqlite {
-
-/**
- * \brief Convenient alias for the logger level enumerator type
- * 
- * \todo Move this to a single logging header for the library
- */
-using level_t = qlib::logger::level_t;
-
-/**
- * \brief Convenience method for retrieving a reference to the single logger
- * instance
- * 
- * \return A reference to the logging singleton
- * 
- * \todo Move this to a single logging header for the library
- */
-inline qlib::logger& logger(void) { return qlib::logger::instance(); }
 
 /**
  * \brief SQLite implementation of the `api::datastore` interface
@@ -56,6 +43,9 @@ inline qlib::logger& logger(void) { return qlib::logger::instance(); }
  * this constraint with some clever ID work, but there doesn't seem to be
  * much point in going to the effort, because -- in this application -- we're
  * only opening one datastore at a time in any case.
+ * 
+ * \todo Additional notes about general design philosophy, and which classes
+ * are responsible for which tables
  */
 class datastore : public api::datastore
 {
@@ -125,7 +115,7 @@ class datastore : public api::datastore
      */
     virtual bool is_ready(void) const
     {
-        return (m_db != boost::none);
+        return ((m_db != boost::none) && m_db->isOpen());
     }   // end is_ready
 
     /**
@@ -206,35 +196,12 @@ class datastore : public api::datastore
             , const QString& fieldName
             , const QString& whereClause) const
     {
-        if (!is_ready())
-            throw error(tr("attempted to retrieve a field value from a "
-                "Datastore that is not open"));
-
-        QString queryString =
-            "SELECT " + fieldName
-            + " FROM " + tableName
-            + " WHERE " + whereClause;
-
-        logger().log(
-            level_t::debug
-            , L"query: {}"_format(queryString.toStdWString()));
-
-        QSqlQuery query(*m_db);
-        if (!query.prepare(queryString))
-            throw error(tr("query preparation error: ") +
-                query.lastError().text());
-
-        if (!query.exec())
-            throw error(tr("query execution error: ") +
-                query.lastError().text());
-
-        // We should have at least one record
-        if (!query.next())
-            throw error(tr("could not locate record"));
-
-        int idx = query.record().indexOf(fieldName);
-
-        return query.value(idx).value<T>();
+        return
+            ncountr::datastores::sqlite::retrieveSingleRecordFieldValue<T>(
+                *m_db
+                , tableName
+                , fieldName
+                , whereClause);
     }   // end retrieveSingleRecordFieldValue template method
 
     /**
@@ -263,29 +230,22 @@ class datastore : public api::datastore
             , const T& value
             , const QString& whereClause)
     {
-        if (!is_ready())
-            throw error(tr("attempted to set a field value in a Datastore "
-                "that is not open"));
-
-        QString queryString = "UPDATE " + tableName
-                                + " SET " + fieldName + " = :v"
-                                " WHERE " + whereClause;
-
-        logger().log(
-            level_t::debug
-            , L"query: {}"_format(queryString.toStdWString()));
-        
-        QSqlQuery query(*m_db);
-        if (!query.prepare(queryString))
-            throw error(tr("query preparation error: ") +
-                query.lastError().text());
-
-        query.bindValue(":v", QVariant(value), QSql::In);
-
-        if (!query.exec())
-            throw error(tr("query execution error: ") +
-                query.lastError().text());        
+        ncountr::datastores::sqlite::updateSingleRecordFieldValue<T>(
+            *m_db
+            , tableName
+            , fieldName
+            , value
+            , whereClause);
     }   // end updateSingleRecordFieldValue template method
+
+    QSqlDatabase& db(void)
+    {
+        if (!is_ready())
+            throw error(tr("attempt to access the Database of a Datastore "
+                "that has not been properly opened"));
+
+        return *m_db;
+    }
 
     // --- Internal Attributes ---
 
@@ -295,9 +255,21 @@ class datastore : public api::datastore
 
     mutable boost::optional<QSqlDatabase> m_db; ///< Database connection
 
-    Q_DECLARE_TR_FUNCTIONS(Document)
+    Q_DECLARE_TR_FUNCTIONS(datastore)
 
 };  // end datastore class
+
+/**
+ * \brief Convenuence function for converting an API date object (from Boost)
+ * to a QDate
+ */
+QDate to_qdate(ncountr::api::date d);
+
+/**
+ * \brief Convenience function for converting a QDate to an API date (from
+ * Boost)
+ */
+ncountr::api::date to_api_date(QDate d);
 
 }}}  // end ncountr::datastores::sqlite namespace
 

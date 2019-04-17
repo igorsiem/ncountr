@@ -40,5 +40,5 @@ include_directories(
 
 add_subdirectory(api)
 add_subdirectory(gui)
-add_subdirectory(sqlite_datastore)
+# add_subdirectory(sqlite_datastore)
 add_subdirectory(test)

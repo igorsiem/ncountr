@@ -11,7 +11,7 @@
 
 #include <QCoreApplication>
 #include <QFileInfo>
-#include "sqlite_datastore/datastore.h"
+#include "api/sqlite_datastore/datastore.h"
 #include "document.h"
 
 Document::Document(ncountr::api::datastore_upr datastore) :

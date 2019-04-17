@@ -11,7 +11,10 @@
 
 #include <string>
 
+#include "account.h"
+#include "currency.h"
 #include "datastore.h"
+#include "date.h"
 #include "error.h"
 
 #ifndef _api_api_h_included
@@ -40,3 +43,22 @@ extern std::wstring wversion(void);
 }}   // end ncountr::api namespace
 
 #endif
+
+/**
+ * \page api_arch API-based Architecture
+ * 
+ * *nCounter* has a three-layer architecture:
+ * 
+ * 1. The *Presentation Layer* includes the GUI and all functionality for
+ *    interacting with the User. The code for this functionality is contained
+ *    in the `src/gui` subdirectory
+ * 
+ * 2. The *API Layer* defines the business logic of the application in
+ *    abstract terms. The code for the API is in the `src/api` folder.
+ * 
+ * 3. The *Storage Layer* provides concrete implementations of the
+ *    abstractions defined in the API Layer, mainly comprising an
+ *    implementation of the `api::datastore` type. The initial version of the
+ *    application provides a Storage Layer based on SQLite database files,
+ *    but other implementations are planned for future iterations.
+ */

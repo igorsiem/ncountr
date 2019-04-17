@@ -20,7 +20,7 @@ add_executable($ENV{QPRJ_PROJECT_NAME}-gui ${GUI_SRC} ${UI_HEADERS})
 target_link_libraries($ENV{QPRJ_PROJECT_NAME}-gui
     ${CONAN_LIBS}
     $ENV{QPRJ_PROJECT_NAME}-api
-    sqlite-datastore
+    # sqlite-datastore
     Qt5::Sql
     Qt5::Widgets
 )

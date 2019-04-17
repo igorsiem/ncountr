@@ -10,6 +10,8 @@
  */
 
 #include <qlib/qlib.h>
+
+#include "account.h"
 #include "datastore.h"
 
 namespace ncountr { namespace datastores { namespace sqlite {
@@ -98,6 +100,7 @@ int datastore::file_format_version(void) const
 
 void datastore::initialise(QSqlDatabase& db)
 {
+    // First, lay out the document info table (which we handle directly)
     // Note: assuming database is already totally empty
     QString queryString = "CREATE TABLE document_info ("
             "id INTEGER PRIMARY KEY"
@@ -143,6 +146,19 @@ void datastore::initialise(QSqlDatabase& db)
             query.lastError().text());
 
     logger().log(level_t::debug, L"new datastore initialised");
+
+    // Now lay out the other tables - handled by other classes
+    account::initialise(db);
 }   // end initialise method
+
+QDate to_qdate(ncountr::api::date d)
+{
+    return QDate(d.year(), d.month().as_number(), d.day());
+}   // end to_qdate
+
+ncountr::api::date to_api_date(QDate d)
+{
+    return ncountr::api::date(d.year(), d.month(), d.day());
+}   // end to_api_date
 
 }}}  // end ncountr::datastores::sqlite namespace

@@ -9,6 +9,7 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
+#include "account.h"
 #include "datastore.h"
 
 #ifndef _sqlite_sqlite_datastore_h_included
