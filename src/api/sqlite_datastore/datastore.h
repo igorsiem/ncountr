@@ -238,6 +238,14 @@ class datastore : public api::datastore
             , whereClause);
     }   // end updateSingleRecordFieldValue template method
 
+    /**
+     * \brief Retrieve (a reference to) the Database object associated with
+     * this Datastore
+     * 
+     * \return The Database object reference
+     * 
+     * \throws error The Datastore is not ready (e.g. Database not open)
+     */
     QSqlDatabase& db(void)
     {
         if (!is_ready())
@@ -258,18 +266,6 @@ class datastore : public api::datastore
     Q_DECLARE_TR_FUNCTIONS(datastore)
 
 };  // end datastore class
-
-/**
- * \brief Convenuence function for converting an API date object (from Boost)
- * to a QDate
- */
-QDate to_qdate(ncountr::api::date d);
-
-/**
- * \brief Convenience function for converting a QDate to an API date (from
- * Boost)
- */
-ncountr::api::date to_api_date(QDate d);
 
 }}}  // end ncountr::datastores::sqlite namespace
 

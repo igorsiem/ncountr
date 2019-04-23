@@ -33,7 +33,7 @@ namespace ncountr { namespace api {
  * 
  * \todo Expand documentation
  * 
- * \todo Document account names / paths / identifiers
+ * \todo Document Account hierarchy, names / paths / identifiers
  * 
  * \todo Document account types, along with the rule that asset / liability
  * accounts should not have income / expense accounts as children, and
@@ -81,22 +81,17 @@ class account
         , expense       ///< Expenses, e.g. Rent
     };  // end type_t enumeration
 
-///    /**
-///     * \brief Opening Data and Balance for an Account
-///     * 
-///     * Assets and Liabilities have specific opening dates and balances. They
-///     * must be supplied for these Account Types, and may not be supplied for
-///     * Income and Expense Accounts.
-///     */
-///    using opening_info_t = std::tuple<date, currency_t>;
-
     DECLARE_DEFAULT_VIRTUAL_LIFE_CYCLE(account)
 
     /**
      * \brief A shared pointer to an Account object
      */
-
     using account_spr = std::shared_ptr<account>;
+
+    /**
+     * \brief A vector of (shared pointers to) Account objects
+     */
+    using accounts_vec_t = std::vector<account_spr>;
 
     /**
      * \brief A collection of (shared pointers to) Accounts, indexed by their
@@ -161,15 +156,11 @@ class account
      */
     virtual std::wstring parent_path(void) const = 0;
 
-///    /**
-///     *  \brief Set the full path of the parent Account
-///     * 
-///     * If this is an empty string, the Account is at the root.
-///     * 
-///     * Parent paths are always assumed to begin at the root, and need not
-///     * start with the `account_path_separator`.
-///     */
-///    virtual void set_parent_path(std::wstring& p) = 0;
+    /**
+     * \brief Retrieve the Parent of an Account (or `nullptr` if the Account
+     * is at the root)
+     */
+    virtual account_spr parent(void) const = 0;
 
     /**
      * \brief Set the parent account for this account
@@ -189,13 +180,25 @@ class account
     virtual void set_parent(account_spr parent) = 0;
 
     /**
+     * \brief Retrieve the direct Child Accounts of this Account
+     * 
+     * A Child Account is an Account that has this Account as a direct Parent
+     */
+    virtual accounts_vec_t children(void) const = 0;
+
+    /**
+     * \brief Retrieve the descendent Accounts of this Account
+     */
+    virtual accounts_vec_t descendants(void) const = 0;
+
+    /**
      * \brief Retrieve the Full Path of the Account
      * 
      * The Full Path of the Account acts as a unique key for Accounts within
      * a Datastore. Note that if the Account is at the root (i.e. the Parent
      * Path is empty), then the Full Path is the same as the Account Name.
      */
-    virtual std::wstring full_path(void) = 0;
+    virtual std::wstring full_path(void) const = 0;
 
     /**
      * \brief Set the Full Path of the Account
@@ -222,47 +225,73 @@ class account
      */
     virtual type_t account_type(void) const = 0;
 
-///    /**
-///     * \brief Set the account type enumerator (asset, liability, income or
-///     * expense)
-///     * 
-///     * When setting the Account Type to `asset` or `liability`, opening
-///     * info (date and balance) *must* be supplied. When setting it to
-///     * `income` or `expense`, it *must not* be supplied.
-///     */
-///    virtual void set_account_type(
-///        type_t t
-///        , boost::optional<opening_info_t> oi = boost::none) = 0;
-
+    /**
+     * Set the Account Type for Income and Expense Accounts
+     * 
+     * Implementatons of this method must enforce Business Rules associated
+     * with Account Types.
+     */
     virtual void set_account_type(type_t t) = 0;
 
+    /**
+     * \brief Set the Account Type for Income and Expense Accounts, as well
+     * as the Opening Date and Balance
+     * 
+     * Implementatons of this method must enforce Business Rules associated
+     * with Account Types.
+     */
     virtual void set_account_type(
         type_t t
         , date opening_date
         , currency_t opening_balance) = 0;
 
-///    /**
-///     * \brief Retrieve the (optional) opening information for an Account
-///     * 
-///     * Opening info is *only* available for `asset` or `liability` accounts.
-///     */
-///    virtual opening_info_t opening_info(void) const = 0;
-///
-///    /**
-///     * \brief Set the Opening Date and Balance as an optional tuple
-///     * 
-///     * The opening data may be removed by setting the property to
-///     * `boost::none`. Note that opening info may *only* be present if --
-///     * and only if -- the account type is `asset` or `liability`.
-///     */
-///    virtual void set_opening_info(boost::optional<opening_info_t> oi) = 0;
+    /**
+     * \brief Determine whether two Account Types are compatible for
+     * parent-child relationships
+     */
+    static bool compatible_parent_child_types(type_t t1, type_t t2)
+    {
+        if ((t1 == type_t::asset) || (t1 == type_t::liability))
+        {
+            if ((t2 == type_t::asset) || (t2 == type_t::liability))
+                return true;
+            else return false;
+        }
+        else
+        {
+            if ((t2 == type_t::asset) || (t2 == type_t::liability))
+                return false;
+            else return true;
 
+        }
+    }   // end compatible_parent_child_types methods
+
+    /**
+     * \brief Retrieve the Opening Date of an Asset or Liability Account
+     * 
+     * This method should not be used with Income or Expense Accounts
+     */
     virtual date opening_date(void) const = 0;
 
+    /**
+     * \brief Set the Opening Date of an Asset or Liability Account
+     * 
+     * This method should not be used with Income or Expense Accounts
+     */
     virtual void set_opening_date(date od) = 0;
 
+    /**
+     * \brief Retrieve the Opening Balance of an Asset or Liability Account
+     * 
+     * This method should not be used with Income or Expense Accounts
+     */
     virtual currency_t opening_balance(void) const = 0;
 
+    /**
+     * \brief Set the Opening Balance of an Asset or Liability Account
+     * 
+     * This method should not be used with Income or Expense Accounts
+     */
     virtual void set_opening_balance(currency_t ob) = 0;
 
 };  // end account class
@@ -277,6 +306,11 @@ using account_spr = account::account_spr;
  * path
  */
 using accounts_by_path_map = account::accounts_by_path_map;
+
+/**
+ * \brief A vector of (shared pointers to) Account objects
+ */
+using accounts_vec_t = account::accounts_vec_t;
 
 }}  // end ncountr::api namespace
 

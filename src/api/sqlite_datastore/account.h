@@ -15,6 +15,7 @@
 
 #include <QCoreApplication>
 #include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QSqlRecord>
 #include <QString>
 
@@ -22,6 +23,7 @@
 using namespace fmt::literals;
 
 #include "../api.h"
+#include "db_utils.h"
 
 #ifndef _sqlite_account_h_included
 #define _sqlite_account_h_included
@@ -34,6 +36,12 @@ namespace ncountr { namespace datastores { namespace sqlite {
  * This class implements the `api::account` interface, and encapsulates the
  * `account` table in the Sqlite database. Objects of this class encapsulate
  * individual Accounts, and records in the `account` table.
+ * 
+ * This class includes low-level database implementations of basic CRUD
+ * operations. These *do not* impose high-level business rules from the API
+ * (e.g. Asset / Liability Accounts with Income / Expense Accounts). These
+ * rules are imposed by the higher-level implementations of the base-class
+ * methods.
  */
 class account : public api::account
 {
@@ -80,11 +88,10 @@ class account : public api::account
      */
     using account_spr = std::shared_ptr<account>;
 
-///    /**
-///     * \brief An invocable object for notifying external components that this
-///     * object is being deleted; the argument is a reference to self
-///     */
-///    using DestructNotifierFn = std::function<void(account&)>;
+    /**
+     * \brief A vector of (shared pointers to) Account objects
+     */
+    using accounts_vec_t = std::vector<account_spr>;
 
     /**
      * \brief Constructor for an Account that references an existing Record
@@ -101,6 +108,36 @@ class account : public api::account
         QSqlDatabase& db
         , int id);
 
+    /**
+     * \brief Create a new Income or Expense Account Record in the database,
+     * returning the `account` object
+     * 
+     * Note that if an Asset or Liability Account is required, the other
+     * overload of this method (which takes Opening Date and Balance) must be
+     * used.
+     * 
+     * \param db The database object in which to create the new Account
+     * Record
+     * 
+     * \param name The name of the Account; this must be unique amongst the
+     * children of the `parent` Account, or unique at the root of the
+     * collection of Accouts if no Parent is set
+     * 
+     * \param t The type of Account; this *must* be `income` or `expense`,
+     * or an exception is thrown
+     * 
+     * \param parent The Parent Account; this may be set to `nullptr` if the
+     * new Account is to be created at the root
+     * 
+     * \param description An optional human-readable description of the
+     * Account
+     * 
+     * \return A shared pointer to the new Account object that can be used
+     * to access the new Record
+     * 
+     * \throws ncountr::datastores::sqlite::account::error Some problem
+     * occurred while attempting to create the new Account
+     */
     static account_spr make_new(
         QSqlDatabase& db
         , QString name
@@ -108,16 +145,54 @@ class account : public api::account
         , account_spr parent
         , boost::optional<QString> description);
 
+    /**
+     * \brief Create a new Asset or Liability Account Record in the database,
+     * returning the `account` object
+     * 
+     * Note that if an Income or Expense Account is required, the other
+     * overload of this method (not taking an Opening Date or Balance) must
+     * be used.
+     * 
+     * \param db The database object in which to create the new Account
+     * Record
+     * 
+     * \param name The name of the Account; this must be unique amongst the
+     * children of the `parent` Account, or unique at the root of the
+     * collection of Accouts if no Parent is set
+     * 
+     * \param t The type of Account; this *must* be `income` or `expense`,
+     * or an exception is thrown
+     * 
+     * \param parent The Parent Account; this may be set to `nullptr` if the
+     * new Account is to be created at the root
+     * 
+     * \param description An optional human-readable description of the
+     * Account
+     * 
+     * \param od The opening date for the Account
+     * 
+     * \param ob The opening balance for the Account
+     * 
+     * \return A shared pointer to the new Account object that can be used
+     * to access the new Record
+     * 
+     * \throws ncountr::datastores::sqlite::account::error Some problem
+     * occurred while attempting to create the new Account
+     */
     static account_spr make_new(
         QSqlDatabase& db
         , QString name
         , type_t t
         , account_spr parent
         , boost::optional<QString> description
-        , ncountr::api::date od
-        , ncountr::api::currency_t ob);
+        , QDate od
+        , double ob);
 
-    static account_spr find_existing(QString path);
+    /**
+     * \brief Locate an existing Account record by its Full Path, and create
+     * an `account` object to access it (as a shared pointer)
+     */
+    static account_spr find_existing(QSqlDatabase& db, QString full_path);
 
     /**
      * \brief Trivial destructor
@@ -135,16 +210,17 @@ class account : public api::account
     // -- Fields --
 
     /**
+     * \brief Retrieve the record ID of the Account
+     */
+    int id(void) const { return m_id; }
+
+    /**
      * \brief Retrieve the Name of the Account
      * 
      * The Account Name uniquely identifies the Account within all the
-     * Accounts under its parent. 
+     * Accounts under its parent.
      */
-    virtual std::wstring name(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual std::wstring name(void) const override;
 
     /**
      * \brief Set the Name of the account
@@ -154,11 +230,7 @@ class account : public api::account
      * 
      * This method should validates the Name using the `valid_name` method.
      */
-    virtual void set_name(std::wstring n) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual void set_name(std::wstring n) override;
 
     /**
      * \brief Retrieve the full path of the Account that is the parent of
@@ -169,142 +241,197 @@ class account : public api::account
      * Parent paths are always assumed to begin at the root, and do not start
      * with the `account_path_separator`.
      */
-    virtual std::wstring parent_path(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual std::wstring parent_path(void) const override;
 
-///    /**
-///     *  \brief Set the full path of the parent Account
-///     * 
-///     * If this is an empty string, the Account is at the root.
-///     * 
-///     * Parent paths are always assumed to begin at the root, and need not
-///     * start with the `account_path_separator`.
-///     */
-///    virtual void set_parent_path(std::wstring& p) override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
-///    }
+    /**
+     * \brief Retrieve the Parent Account of this Account (or `nullptr` if
+     * this Account is at the root)
+     */
+    virtual base_t::account_spr parent(void) const override;
 
-    virtual void set_parent(account_spr parent)
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    /**
+     * \brief Retrieve the Parent Account of this Account (or `nullptr` if
+     * this Account is at the root)
+     */
+    account_spr parent_sqlite(void) const;
+
+    /**
+     * \brief Set the Parent Account of this Account
+     * 
+     * If the Parent is set to `nullptr`, then this Account is placed at the
+     * root. Note that the Parent Account must have a compatible Account
+     * Type.
+     */
+    virtual void set_parent(api::account_spr parent) override;
+
+    /**
+     * \brief Retrieve all Accounts that are direct children of this Account
+     */
+    virtual base_t::accounts_vec_t children(void) const override;
+
+    /**
+     * \brief Retrieve all Accounts that are Descendants of this Account
+     */
+    virtual base_t::accounts_vec_t descendants(void) const override;
+
+    /**
+     * \brief Retrieve all the direct child accounts of this accounts
+     * 
+     * A Child is a Descendant whose Parent Path is the same as our Full Path
+     * 
+     * \todo This method is implemented somewhat inefficiently - it
+     * retrieves all the descendants, and then filters out descendants that
+     * are not direct children
+     */
+    accounts_vec_t children_sqlite(void) const;
+
+    /**
+     * \brief Retrieve all the descendent Accounts of this Account
+     * 
+     * A descendent is any Account that has a Full Path that begins with the
+     * Full Path of this Account.
+     */
+    accounts_vec_t descendants_sqlite(void) const;
 
     /**
      * \brief Retrieve the Full Path of the Account
      * 
-     * The Full Path of the Account acts as a unique key for Accounts within
-     * a Datastore. Note that if the Account is at the root (i.e. the Parent
+     * The Full Path of the Account includes the names of all parent and
+     * ancestor accounts, and acts as a unique key for Accounts within a
+     * Datastore. Note that if the Account is at the root (i.e. the Parent
      * Path is empty), then the Full Path is the same as the Account Name.
      */
-    virtual std::wstring full_path(void) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual std::wstring full_path(void) const override;
 
     /**
      * \brief Set the Full Path of the Account
      * 
-     * The Full Path of the Account acts as a unique key for Accounts within
-     * a Datastore. Note that if the Account is at the root (i.e. the Parent
-     * Path is empty), then the Full Path is the same as the Account Name.
+     * It is important to note that the Full Path is directly recorded in the
+     * underlying Sqlite Database, as a unique key for Accounts. It
+     * implicitly encodes the parent-child relationship, as well as the Name
+     * of the Account.
+     * 
+     * Changing the Full Path potentially involves changing the parent
+     * Account, this method checks that the Parent implied by the Full Path
+     * exists, and has a compatible Account Type. If the Account is at the
+     * root (i.e. the Parent Path is empty), then the Full Path is the same
+     * as the Account Name.
+     * 
+     * \todo Add checks for circular parent / child / descendent
+     * relationships
      */
-    virtual void set_full_path(std::wstring p)
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }   // end set_full_path method
+    virtual void set_full_path(std::wstring p);
 
     /**
      * \brief Retrieve the Account Description
      */
-    virtual std::wstring description(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual std::wstring description(void) const override;
 
     /**
      * \brief Set the Account Description string
      */
-    virtual void set_description(std::wstring d) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual void set_description(std::wstring d) override;
 
     /**
      * \brief Retrieve the account type enumerator (asset, liability, income
      * or expense)
      */
-    virtual type_t account_type(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }    
+    virtual type_t account_type(void) const override;
 
-    virtual void set_account_type(type_t t) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    /**
+     * \brief Set the Account Type for Income and Expense Accounts
+     * 
+     * This method ensures that the Type being set it compatible with the
+     * Parent (if it exists) and any children.
+     */
+    virtual void set_account_type(type_t t) override;
 
+    /**
+     * \brief Set the Account Type for Asset and Liability Accounts, along
+     * with the Opening Date and Balance
+     * 
+     * This method ensures that the Type being set it compatible with the
+     * Parent (if it exists) and any children.
+     */
     virtual void set_account_type(
-            type_t t
-            , ncountr::api::date opening_date
-            , ncountr::api::currency_t opening_balance) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
+        type_t t
+        , ncountr::api::date opening_date
+        , ncountr::api::currency_t opening_balance) override;
 
-    virtual ncountr::api::date opening_date(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
+    /**
+     * \brief Retrieve the Opening Date of an Asset or Liability Account
+     * 
+     * This method should not be called for Income or Expense Accounts.
+     */
+    virtual ncountr::api::date opening_date(void) const override;
 
-    virtual void set_opening_date(ncountr::api::date od) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
+    /**
+     * \brief Set the Opening Date of an Asset of Liability Accouont
+     * 
+     * This method should not be called for Income or Expense Accounts.
+     */
+    virtual void set_opening_date(ncountr::api::date od) override;
 
-    virtual ncountr::api::currency_t opening_balance(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
+    /**
+     * \brief Retrieve the Opening Balance of an Asset or Liability Account
+     * 
+     * This method should not be called for Income or Expense Accounts.
+     */
+    virtual ncountr::api::currency_t opening_balance(void) const override;
 
-    virtual void set_opening_balance(ncountr::api::currency_t ob) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
+    /**
+     * \brief Set the Opening Balance of an Asset or Liability Account
+     * 
+     * This method should not be called for Income or Expense Accounts.
+     */
+    virtual void set_opening_balance(ncountr::api::currency_t ob) override;
 
+    /**
+     * \brief Convert an Account Type enumerator to a human-readable string
+     */
     static QString to_qstring(type_t t);
 
+    /**
+     * \brief Convert a human-readable string for an Account Type back to
+     * an Account Type enumerator
+     */
     static type_t to_account_type(QString str);
 
     // -- Lower-level Database Services --
 
-    // TODO Note in all documentation that higher-level business rules (e.g.
-    // that Opening Info is supplied if and only if the Account Type is Asset
-    // Liability) are NOT ENFORCED AT THIS LOW LEVEL
+    // Higher-level business rules (e.g. that Opening Info is supplied if and
+    // only if the Account Type is Asset Liability) are NOT ENFORCED AT THIS
+    // LOW LEVEL
     //
     // All business rule checks are done in the methods that call these
     // lower-level methods
 
+    /**
+     * \brief Retrieve the highest ID in the `account` table
+     * 
+     * This method is useful when creating a new record (just add 1 to this
+     * to get a new ID), since Sqlite doesn't seem to have an AUTOINCREMENT
+     * field.
+     */
     int max_id(void) const;
 
+    /**
+     * \brief Retrieve the highest ID in the `account` table
+     * 
+     * This method is useful when creating a new record (just add 1 to this
+     * to get a new ID), since Sqlite doesn't seem to have an AUTOINCREMENT
+     * field.
+     */
     static int max_id(QSqlDatabase& db);
 
+    /**
+     * \brief Create a new Income or Expense Account record
+     * 
+     * Note that this overload should be used for creating `income` and
+     * `expense` accounts (because opening date and balance are not given),
+     * but this is not enforced. Higher-level methods enforce this business
+     * rule.
+     */
     static void create_record(
         QSqlDatabase& db
         , int id
@@ -312,25 +439,85 @@ class account : public api::account
         , boost::optional<QString> description
         , type_t t);
 
+    /**
+     * \brief Create a new Asset or Liability Account record
+     * 
+     * Note that this overload should be used for creating `asset` and
+     * `liability` accounts (because opening date and balance are taken), but
+     * this is not enforced. Higher-level methods enforce this business rule.
+     */
     static void create_record(
         QSqlDatabase& db
         , int id
         , QString full_path
         , boost::optional<QString> description
         , type_t t
-        , ncountr::api::date od
-        , ncountr::api::currency_t ob);
+        , QDate od
+        , double ob);
 
+    /**
+     * \brief Find an Account Record by its ID
+     * 
+     * \param db A reference to the Database object (must be open and ready
+     * to run queries)
+     * 
+     * \param id The Record ID for which to search
+     * 
+     * \return The Account Record or `boost::none` if no Record with this ID
+     * is found
+     */
     static boost::optional<QSqlRecord> find_by_id(
         QSqlDatabase& db
         , int id);
 
+    /**
+     * \brief Find an Account Record by its Full Path string
+     * 
+     * \param db A reference to the Database object (must be open and ready
+     * to run queries)
+     * 
+     * \param full_path The Path of the Account whose record is to be
+     * retrieved
+     * 
+     * \return The Account Record or `boost::none` if no Record with this 
+     * Path is found
+     */
     static boost::optional<QSqlRecord> find_by_full_path(
         QSqlDatabase& db
         , QString full_path);
 
+    /**
+     * \brief Prepare, execute and bind a generic SQL `SELECT` query
+     * 
+     * \param query A new query object created with the relevant Database;
+     * when this method returns, `query` can be used to access results
+     * 
+     * \param where_clause The criteria on which to search (excluding the
+     * `WHERE` keyword)
+     * 
+     * \param bind_list A name-value map of parameters to bind
+     */
+    static void select(
+        QSqlQuery& query
+        , QString where_clause
+        , std::map<QString, QVariant> bind_list = {});
+
+    /**
+     * \brief Destroy an Account record by ID
+     * 
+     * \param db The database object to use
+     * 
+     * \param id The ID of the record to destroy
+     */
     static void destroy_record_by_id(QSqlDatabase& db, int id);
 
+    /**
+     * \brief Destroy an Account Record by its Full Path
+     * 
+     * \param db The Database object
+     * 
+     * \param full_path The Path of the Record
+     */
     static void destroy_record_by_full_path(
         QSqlDatabase& db, QString full_path);
 
@@ -348,7 +535,7 @@ class account : public api::account
      * Note that this may be absent (`boost::none`) for a new Account Record
      * that has not yet been saved
      */
-    boost::optional<int> m_id;
+    int m_id;
 
     Q_DECLARE_TR_FUNCTIONS(account)
 
@@ -358,6 +545,11 @@ class account : public api::account
  * \brief A shared pointer to an Account object
  */
 using account_spr = account::account_spr;
+
+/**
+ * \brief A vector of (shared pointers to) Account objects
+ */
+using accounts_vec_t = account::accounts_vec_t;
 
 }}} // end ncountr::datastores::sqlite namespace
 

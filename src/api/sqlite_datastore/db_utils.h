@@ -10,10 +10,12 @@
  */
 
 #include <QCoreApplication>
+#include <QDate>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QString>
+#include <QVariant>
 
 #include "../api.h"
 #include "logging.h"
@@ -23,6 +25,10 @@
 
 namespace ncountr { namespace datastores { namespace sqlite {
 
+/**
+ * \brief An exception class for signalling errors associated with low-level
+ * database operations in the Sqlite Datastore
+ */
 class DbUtilsError : public api::error
 {
     public:
@@ -76,9 +82,9 @@ class DbUtilsError : public api::error
 template <typename T>
 T retrieveSingleRecordFieldValue(
     QSqlDatabase& db
-    , const QString& tableName
-    , const QString& fieldName
-    , const QString& whereClause)
+    , QString tableName
+    , QString fieldName
+    , QString whereClause)
 {
     if (!db.isOpen())
         throw DbUtilsError(DB_UTILS_TR("attempted to retrieve a field value "
@@ -137,10 +143,10 @@ T retrieveSingleRecordFieldValue(
 template <typename T>
 void updateSingleRecordFieldValue(
         QSqlDatabase& db
-        , const QString& tableName
-        , const QString& fieldName
-        , const T& value
-        , const QString& whereClause)
+        , QString tableName
+        , QString fieldName
+        , T value
+        , QString whereClause)
 {
     if (!db.isOpen())
         throw DbUtilsError(DB_UTILS_TR("attempted to set a field value in a "
@@ -166,6 +172,24 @@ void updateSingleRecordFieldValue(
              query.lastError().text());
 
 }   // end updateSingleRecordFieldValue template function
+
+/**
+ * \brief Convenuence function for converting an API date object (from Boost)
+ * to a QDate
+ */
+inline QDate to_qdate(ncountr::api::date d)
+{
+    return QDate(d.year(), d.month().as_number(), d.day());
+}   // end to_qdate
+
+/**
+ * \brief Convenience function for converting a QDate to an API date (from
+ * Boost)
+ */
+inline ncountr::api::date to_api_date(QDate d)
+{
+    return ncountr::api::date(d.year(), d.month(), d.day());
+}   // end to_api_date
 
 }}} // end ncountr::datastores::sqlite namespace
 
