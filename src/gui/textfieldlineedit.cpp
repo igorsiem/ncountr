@@ -91,6 +91,7 @@ void TextFieldLineEdit::setMode(mode_t m)
                 m_cancelButton->show();
                 m_lineEdit->setReadOnly(false);
                 m_lineEdit->setFrame(true);
+                m_lineEdit->setFocus();
 
                 m_currentMode = mode_t::edit;
             }

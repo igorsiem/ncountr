@@ -69,6 +69,8 @@ void MainWindow::executeFileNewFile(void)
             // recreating it, so that connections are cleaned up before new
             // ones are created.
             m_document = nullptr;
+            notifyDocumentClosed();
+
             m_document = std::move(Document::makeSqliteDocument(filePath));
 
             // Remember the path of the file for next time
@@ -83,12 +85,15 @@ void MainWindow::executeFileNewFile(void)
             // Update UI
             ui->statusBar->showMessage(msg, 5000);
             setWindowTitleMessage(fi.baseName());
-            m_nameFew->updateFromField();
-            m_nameFew->setCanEdit(true);
-            m_descriptionFew->updateFromField();
-            m_descriptionFew->setCanEdit(true);
+            
+///            m_nameFew->updateFromField();
+///            m_nameFew->setCanEdit(true);
+///            m_descriptionFew->updateFromField();
+///            m_descriptionFew->setCanEdit(true);
+///
+///            // TODO set up other UI elements
 
-            // TODO set up other UI elements
+            notifyDocumentOpened();
 
         }   // end if the chosen file path is not empty
         
@@ -130,6 +135,8 @@ void MainWindow::executeFileOpenFile(void)
             // recreating it, so that connections are cleaned up before new
             // ones are created.
             m_document = nullptr;
+            notifyDocumentClosed();
+            
             m_document = std::move(Document::makeSqliteDocument(filePath));
 
             // Remember the path of the file for next time
@@ -143,12 +150,15 @@ void MainWindow::executeFileOpenFile(void)
             // Update UI
             ui->statusBar->showMessage(msg, 5000);
             setWindowTitleMessage(fi.baseName());
-            m_nameFew->updateFromField();
-            m_nameFew->setCanEdit(true);
-            m_descriptionFew->updateFromField();
-            m_descriptionFew->setCanEdit(true);
 
-            // TODO set up other UI elements
+///            m_nameFew->updateFromField();
+///            m_nameFew->setCanEdit(true);
+///            m_descriptionFew->updateFromField();
+///            m_descriptionFew->setCanEdit(true);
+///
+///            // TODO set up other UI elements
+
+            notifyDocumentOpened();
 
         }   // end if a file name was selected
 
@@ -170,14 +180,16 @@ void MainWindow::executeFileCloseFile(void)
 
         ui->statusBar->showMessage(msg, 5000);
 
-        // Update UI
-        setWindowTitleMessage();
-        m_nameFew->updateFromField();
-        m_nameFew->setCanEdit(false);
-        m_descriptionFew->updateFromField();
-        m_descriptionFew->setCanEdit(false);
+        notifyDocumentClosed();
 
-        // TODO clear other UI elements
+///        // Update UI
+///        setWindowTitleMessage();
+///        m_nameFew->updateFromField();
+///        m_nameFew->setCanEdit(false);
+///        m_descriptionFew->updateFromField();
+///        m_descriptionFew->setCanEdit(false);
+///
+///        // TODO clear other UI elements
 
     }
     ACTION_CATCH_DURING("Close File")
@@ -187,6 +199,9 @@ void MainWindow::executeFileExitApplication(void)
 {
     ACTION_TRY
     {
+        m_document = nullptr;
+        notifyDocumentClosed();
+
         close();
     }
     ACTION_CATCH_DURING("Exit Application")

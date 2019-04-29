@@ -150,7 +150,12 @@ class TextFieldLineEdit : public QWidget
      * disabled, and the double-click behaviour of the Line Edit control will
      * not put the control into edit mode.
      */
-    void setCanEdit(bool c) { m_editButton->setEnabled(c); }
+    void setCanEdit(bool c)
+    {
+        if (!c) setMode(mode_t::display);
+        
+        m_editButton->setEnabled(c);
+    }
 
     // --- Internal Declarations ---
 

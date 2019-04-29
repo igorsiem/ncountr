@@ -42,20 +42,6 @@ TEST_CASE("sqlite datastore", "[unit]")
     REQUIRE(ds->name() == L"Datastore name");
     REQUIRE(ds->description() == L"Datastore description");
 
-    // Account-related tests
-    SECTION("account")
-    {
-
-        // Low-level SQL Database operations
-        SECTION("low-level operations")
-        {
-
-        }   // end low-level operations section
-
-        // TODO - higher-level business-logic tests
-
-    }   // ed acccount section
-
     // Explicitly delete the Datastore object so that we can verify that no
     // exceptions are thrown.
     REQUIRE_NOTHROW(ds = nullptr);
@@ -232,11 +218,17 @@ TEST_CASE("sqlite account", "[unit]")
             , nullptr
             , QString("all expenses"));
 
-        // Make sure we got all the account objects.
+        // Make sure we got all the account objects, and that they are
+        // valid / ready
         REQUIRE(assets_ac);
         REQUIRE(liabilities_ac);
         REQUIRE(income_ac);
         REQUIRE(expenses_ac);
+
+        REQUIRE(assets_ac->is_ready());
+        REQUIRE(liabilities_ac->is_ready());
+        REQUIRE(income_ac->is_ready());
+        REQUIRE(expenses_ac->is_ready());
 
         // Check all our fields now
         REQUIRE(assets_ac->name() == L"assets");
@@ -390,7 +382,8 @@ TEST_CASE("sqlite account", "[unit]")
             , expenses_ac
             , QString("interest on loans and credit card"));
 
-        // All account objects were created successfully
+        // All account objects were created successfully, and that they are
+        // ready for further operations
         REQUIRE(bank_ac);
         REQUIRE(cash_ac);
         REQUIRE(credit_card_ac);
@@ -399,6 +392,19 @@ TEST_CASE("sqlite account", "[unit]")
         REQUIRE(contract_work_ac);
         REQUIRE(rent_ac);
         REQUIRE(interest_ac);
+
+        REQUIRE(bank_ac->is_ready());
+        REQUIRE(cash_ac->is_ready());
+        REQUIRE(credit_card_ac->is_ready());
+        REQUIRE(car_loan_ac->is_ready());
+        REQUIRE(salary_ac->is_ready());
+        REQUIRE(contract_work_ac->is_ready());
+        REQUIRE(rent_ac->is_ready());
+        REQUIRE(interest_ac->is_ready());
+
+        // At this point, we can query for the root Account Records, and
+        // receive the 4 top-level Accounts.
+        REQUIRE(ds->root_accounts().size() == 4);
 
         // Check children method - top-level accounts have two children
         // each; lower-level accounts have none
@@ -581,6 +587,23 @@ TEST_CASE("sqlite account", "[unit]")
         REQUIRE_THROWS_AS(
             rent_ac->set_parent(liabilities_ac)
             , ncountr::datastores::sqlite::account::error);
+
+        // Account Deletion
+        REQUIRE(cash_ac->is_ready() == true);
+        REQUIRE_NOTHROW(cash_ac->destroy());
+        REQUIRE(cash_ac->is_ready() == false);
+        if (ncountr::datastores::sqlite::account::find_by_full_path(
+                ds->db()
+                , "assets/cash") != boost::none)
+            FAIL("retrieved a valid record when none was expected");
+
+        // Except case - can't destroy an Account with Children
+        REQUIRE_THROWS_AS(
+            liabilities_ac->destroy()
+            , ncountr::datastores::sqlite::account::error);
+
+        // Liabilities Account is still ready after failed destruction
+        REQUIRE(liabilities_ac->is_ready());
 
     }   // end high-level section
 

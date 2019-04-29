@@ -61,4 +61,21 @@ extern std::wstring wversion(void);
  *    implementation of the `api::datastore` type. The initial version of the
  *    application provides a Storage Layer based on SQLite database files,
  *    but other implementations are planned for future iterations.
+ * 
+ * \todo Note on string handling, and switching between `QString` and
+ * `std::wstring`.
+ */
+
+/**
+ * \page naming_conventions Naming Conventions
+ * 
+ * \todo Explain naming conventions, and where camel-case is taken from Qt,
+ * and snake-case from the C++ standard
+ */
+
+/**
+ * \page translation_support Support for Language Translation
+ * 
+ * \todo Explain about using Qt's language translation framework for all
+ * User-facing strings, noting that log messages are always in English
  */

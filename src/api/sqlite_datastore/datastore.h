@@ -160,6 +160,17 @@ class datastore : public api::datastore
      */
     int file_format_version(void) const;
 
+    /**
+     * \brief Retrieve all the Accounts that are at the root
+     */
+    virtual api::accounts_vec_t root_accounts(void) override;
+
+    /**
+     * \brief Retrieve an Account object given its Full Path
+     */
+    virtual api::account_spr find_by_full_path(
+        std::wstring full_path) override;
+
     // -- Inernal Helper Functions --
     
     /**

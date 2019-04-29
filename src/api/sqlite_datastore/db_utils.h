@@ -14,8 +14,12 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 #include <QString>
 #include <QVariant>
+
+#include <fmt/format.h>
+using namespace fmt::literals;
 
 #include "../api.h"
 #include "logging.h"

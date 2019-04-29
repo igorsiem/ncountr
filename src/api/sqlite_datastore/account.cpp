@@ -136,6 +136,22 @@ account_spr account::find_existing(QSqlDatabase& db, QString full_path)
     else return std::make_shared<account>(db, rec->value("id").value<int>());
 }   // end find_existing
 
+bool account::is_ready(void) const
+{
+    return (m_db.isOpen() && (m_id > 0));
+}   // end  method
+
+void account::destroy(void)
+{
+    if (descendants().size() > 0)
+        throw error(tr("attempt to destroy an Account that has Child "
+            "Accounts - ") + QString::fromStdWString(name()));
+
+    destroy_record_by_id(m_db, m_id);
+
+    m_id = 0;
+}   // end  method
+
 account::~account(void)
 {
 }   // end destructor

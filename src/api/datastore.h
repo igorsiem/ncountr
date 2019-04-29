@@ -82,6 +82,23 @@ class datastore
      */
     virtual void set_description(std::wstring d) = 0;
 
+    // -- Account-related Functionality --
+
+    /**
+     * \brief Retrieve all the Accounts that are at the root
+     */
+    virtual accounts_vec_t root_accounts(void) = 0;
+
+    /**
+     * \brief Retrieve an Account giving its Full Path
+     * 
+     * \param full_path The Full Path of the Account
+     * 
+     * \return A shared pointer to an Account object for accessing the
+     * Account data, or `nullptr` if there is no Account with the given Path
+     */
+    virtual account_spr find_by_full_path(std::wstring full_path) = 0;
+
 };  // end datastore class
 
 /**

@@ -42,6 +42,9 @@ namespace ncountr { namespace datastores { namespace sqlite {
  * (e.g. Asset / Liability Accounts with Income / Expense Accounts). These
  * rules are imposed by the higher-level implementations of the base-class
  * methods.
+ * 
+ * \todo Expand documentation explaining ephemeral treatment of Accounts, and
+ * how Sqlite Account objects are interfaces to DB records
  */
 class account : public api::account
 {
@@ -195,7 +198,31 @@ class account : public api::account
     static account_spr find_existing(QSqlDatabase& db, QString full_path);
 
     /**
+     * \brief Check whether the Account object can be used
+     * 
+     * This method checks that the database is open, and that the record
+     * ID is greater than zero. It does *not* check that the Record is
+     * actually present in the Database.
+     */
+    virtual bool is_ready(void) const override;
+
+    /**
+     * \brief Destroy the underlying storage associated with this record
+     * 
+     * This method checks to see that the Account has no Descendants, and
+     * then deletes the Record. It also sets the record ID to zero, so that
+     * `is_ready` will return `false.
+     * 
+     * \throws error An attempt was made to destroy an Account that has
+     * Descendants
+     */
+    virtual void destroy(void);
+
+    /**
      * \brief Trivial destructor
+     * 
+     * Note that this method destroys the Account object that is used to
+     * access the Account Record, but does not destroy the Record itself.
      */
     virtual ~account(void);
 

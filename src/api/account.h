@@ -42,6 +42,8 @@ namespace ncountr { namespace api {
  * and Expense Accounts *must not* have these items. These business rules
  * are enforced in the runtime implementation, rather than an hierarchical
  * Account class structure.
+ * 
+ * \todo Expand documentation explaining ephemeral treatment of Accounts
  */
 class account
 {
@@ -84,9 +86,35 @@ class account
     DECLARE_DEFAULT_VIRTUAL_LIFE_CYCLE(account)
 
     /**
+     * \brief Check whether the Account object can be used
+     * 
+     * Implementations of this method validate underlying storage, such that
+     * all other data access methods will work for the Account object.
+     * Specifically, this method will return `false` after `destroy` is
+     * called.
+     */
+    virtual bool is_ready(void) const = 0;
+
+    /**
+     * \brief Destroy the underlying storage associated with this record
+     * 
+     * After this method is called, `is_ready` will return `false`, and
+     * calls to other data access methods for the Account will fail.
+     * 
+     * Note that an Account with Children may not be destroyed directly.
+     * External components must first delete all Descendents.
+     */
+    virtual void destroy(void) = 0;
+
+    /**
      * \brief A shared pointer to an Account object
      */
     using account_spr = std::shared_ptr<account>;
+
+    /**
+     * \brief A shared pointer to a const Account object
+     */
+    using const_account_spr = std::shared_ptr<const account>;
 
     /**
      * \brief A vector of (shared pointers to) Account objects
@@ -177,7 +205,7 @@ class account
      * * Ensure that the Account's Name is unique in the set of sibling
      *   Accounts
      */
-    virtual void set_parent(account_spr parent) = 0;
+    virtual void set_parent(account_spr parent) = 0;    
 
     /**
      * \brief Retrieve the direct Child Accounts of this Account
@@ -300,6 +328,11 @@ class account
  * \brief A shared pointer to an Account object
  */
 using account_spr = account::account_spr;
+
+/**
+ * \brief A shared pointer to a const Account object
+ */
+using const_account_spr = account::const_account_spr;
 
 /**
  * \brief A collection (shared pointers to) Accounts, indexed by the full

@@ -23,6 +23,7 @@ MainWindow::MainWindow(
     , m_document(nullptr)
     , m_nameFew(nullptr)
     , m_descriptionFew(nullptr)
+    , m_accountTreeModel(nullptr)
 {
     setupUi();
 }   // end constructor

@@ -1,6 +1,6 @@
 /**
  * \file document.h
- * Declare the document class
+ * Declare the Document class
  * 
  * \author Igor Siemienowicz
  * 
@@ -13,6 +13,7 @@
 
 #include <QCoreApplication>
 #include <QException>
+#include <QObject>
 #include <QString>
 
 #include <qlib/qlib.h>
@@ -22,6 +23,33 @@
 
 #ifndef _gui_document_h_installed
 #define _gui_document_h_installed
+
+/**
+ * \brief A namespace for specifying API-related declarations
+ */
+namespace Api
+{
+
+    /**
+     * \brief A shared pointer to an Account object
+     */
+    using AccountSpr = ncountr::api::account_spr;
+
+    /**
+     * \brief A shared pointer to a const Account object
+     */
+    using ConstAccountSpr = ncountr::api::const_account_spr;
+
+    /**
+     * \brief A vector of (shared pointers to) Account objects
+     */
+    using AccountsVec = ncountr::api::accounts_vec_t;
+
+    /**
+     * \brief Account Type enumerator
+     */
+    using AccountType = ncountr::api::account::type_t;
+}
 
 /**
  * \brief Class for encapsulating a datastore and asssociated types into
@@ -121,6 +149,23 @@ class Document final
      */
     virtual void setDescription(QString d)
         { m_datastore->set_description(d.toStdWString()); }
+
+    // -- Account-related Functionality
+
+    /**
+     * \brief Retrieve the set of Accounts at the root
+     */
+    Api::AccountsVec rootAccounts(void);
+
+    /**
+     * \brief Retrieve an Account object given its Full Path
+     * 
+     * \param fullPath The Full Path of the Account
+     * 
+     * \return A shared pointer to the Account object, or `nullptr` if there
+     * is no Account in the Datastore with the given Path
+     */
+    Api::AccountSpr findAccountByFullPath(QString fullPath);
 
     // --- Internal Declarations ---
 

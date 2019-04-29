@@ -90,6 +90,40 @@ void datastore::set_description(std::wstring d)
         , "id = 1");
 }   // end set_description method
 
+api::accounts_vec_t datastore::root_accounts(void)
+{
+
+    if (!is_ready())
+        throw error(tr("attempt to retrieve root Accounts from a Datastore "
+            "that is not open / ready"));
+
+    QSqlQuery query(*m_db);
+    account::select(
+        query
+        , QString("full_path NOT LIKE '%")
+            + QString::fromStdWString(account::account_path_separator)
+            + QString("%'"));
+
+    api::accounts_vec_t results;
+    while (query.next())
+        results.push_back(
+            std::make_shared<account>(
+                *m_db
+                , query.value("id").value<int>()));
+
+    return results;
+}   // end root_accounts
+
+api::account_spr datastore::find_by_full_path(
+        std::wstring full_path)
+{
+    if (!is_ready())
+        throw error(tr("attempt to find an Account in a Datastore that is "
+            "not open / ready"));
+
+    return account::find_existing(*m_db, QString::fromStdWString(full_path));
+}   // end find_by_root_path method
+
 int datastore::file_format_version(void) const
 {
     return retrieveSingleRecordFieldValue<int>(

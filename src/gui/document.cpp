@@ -36,3 +36,13 @@ DocumentUpr Document::makeSqliteDocument(QString filePath)
 
     return std::make_unique<Document>(std::move(ds));
 }   // end makeSqliteDocument
+
+Api::AccountsVec Document::rootAccounts(void)
+{
+    return m_datastore->root_accounts();
+}   // end root_accounts method
+
+Api::AccountSpr Document::findAccountByFullPath(QString fullPath)
+{
+    return m_datastore->find_by_full_path(fullPath.toStdWString());
+}   // end find_account_by_path method

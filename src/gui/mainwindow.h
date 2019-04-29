@@ -12,6 +12,7 @@
 #include <QMainWindow>
 #include <QSettings>
 
+#include "accounttreemodel.h"
 #include "config.h"
 #include "document.h"
 #include "textfieldlineedit.h"
@@ -80,6 +81,8 @@ class MainWindow : public QMainWindow
     private:
 
     // -- UI Setup --
+    //
+    // These methods are inmplemented in the `mainwindow/setup_ui.cpp` file
 
     /**
      * \brief Set up all user interface elements
@@ -88,9 +91,42 @@ class MainWindow : public QMainWindow
      */
     void setupUi(void);
 
+    /**
+     * \brief Set up the Central Widget of the Main Window (which contains
+     * all the other 'document' items, but not the Tool Bar or Status Bar)
+     */
     void setupCentralWidget(void);
 
-    // - Actions and Commands -
+    /**
+     * \brief Set up the splitters that are used to divide the content of
+     * the Central Widget
+     */
+    void setupTopLevelSplitters(QWidget* parent);
+
+    /**
+     * \brief Create and set up the Widget for displaying and editing the
+     * top-level document information (e.g. Name, Description, etc.)
+     * 
+     * Note that this method also instantiates the editing child widgets for
+     * document information as (pointer) attributes of the Main Window (e.g.
+     * `m_descriptionFew` etc). These need their status updated in response
+     * to events such as opening and closing documents.
+     * 
+     * \return A pointer to the new (`QFrame`) widget
+     */
+    QFrame* createDocumentInfoWidget(void);
+
+    /**
+     * \brief Create and set up the Widget for displaying information about
+     * the currently displayed document information
+     * 
+     * \return A pointer to the new (`QFrame`) widget
+     * 
+     * \todo This method only added placeholder text to the widget
+     */
+    QFrame* createViewInfoWidget(void);
+
+    // -- Actions and Commands --
     //
     // These methods are implemented in the
     // `mainwindow/setup_commands_and_actions.cpp` file.
@@ -163,6 +199,15 @@ class MainWindow : public QMainWindow
      */
     void executeFileExitApplication(void);
 
+    // -- Notifications --
+    //
+    // Note that these method are implemented in the
+    // `mainwindow/notifications.cpp` file
+
+    void notifyDocumentOpened(void);
+
+    void notifyDocumentClosed(void);
+
     // -- Internal Helper Methods --
 
     // - Document and Path Settings -
@@ -207,6 +252,8 @@ class MainWindow : public QMainWindow
      */
     void setLastDocumentFileUsed(const QString& filePath);
 
+    // - Miscellaneous Helper Functions -
+
     /**
      * \brief Add a message (possibly blank) to the Window title
      * 
@@ -249,8 +296,17 @@ class MainWindow : public QMainWindow
 
     // - UI Widgets -
 
+    // Document-level Information Widgets
     TextFieldLineEdit* m_nameFew; ///< Edit control for the Documet Name
     TextFieldLineEdit* m_descriptionFew;  ///< Editing for the Description
+
+    // Account Widgets
+
+    /**
+     * \brief Tree model object for rendering Acccounts information from the
+     * document
+     */
+    AccountTreeModel* m_accountTreeModel;
 
 };  // end MainWindow class
 
