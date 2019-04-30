@@ -18,7 +18,7 @@
 #include <QPushButton>
 #include <QSplitter>
 
-#include "../logging.h"
+#include "../utils/logging.h"
 #include "../mainwindow.h"
 #include "ui_mainwindow.h"
 

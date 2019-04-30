@@ -19,7 +19,7 @@
 #include <qlib/qlib.h>
 #include <api/api.h>
 
-#include "error.h"
+#include "utils/error.h"
 
 #ifndef _gui_document_h_installed
 #define _gui_document_h_installed

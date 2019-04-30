@@ -9,9 +9,9 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
-#include "../api/sqlite_datastore/db_utils.h"
+#include "../../api/sqlite_datastore/db_utils.h"
 #include "accounttreemodel.h"
-#include "logging.h"
+#include "../utils/logging.h"
 
 AccountTreeModel::AccountTreeModel(
         Document& document
@@ -130,19 +130,6 @@ QString AccountTreeModel::Item::fullPath(void) const
     QString parentPath;
 
     auto parent = parentItem.lock();
-
-    if (parent)
-        logging::logger().log(
-            logging::level_t::debug
-            , L"fullPath - we have a parent");
-    else
-        logging::logger().log(
-            logging::level_t::debug
-            , L"fullPath - NO PARENT");
-
-    logging::logger().log(
-        logging::level_t::debug
-        , (QString("fullPath - name = ") + name).toStdWString());
 
     if (parent)
         parentPath = parent->fullPath()

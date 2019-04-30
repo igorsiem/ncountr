@@ -19,9 +19,9 @@ using namespace fmt::literals;
 
 #include <api/api.h>
 
-#include "config.h"
-#include "logging.h"
 #include "mainwindow.h"
+#include "utils/config.h"
+#include "utils/logging.h"
 
 /**
  * \brief Entry point for the GUI executable

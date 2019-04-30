@@ -13,10 +13,10 @@
 #include <QSettings>
 #include <QTreeView>
 
-#include "accounttreemodel.h"
-#include "config.h"
 #include "document.h"
-#include "textfieldlineedit.h"
+#include "ui_components/accounttreemodel.h"
+#include "ui_components/textfieldlineedit.h"
+#include "utils/config.h"
 
 #ifndef _gui_mainwindow_h_installed
 #define _gui_mainwindow_h_installed

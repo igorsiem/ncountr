@@ -10,7 +10,7 @@
  */
 
 #include <QHBoxLayout>
-#include "error_handling.h"
+#include "../utils/error_handling.h"
 #include "textfieldlineedit.h"
 
 TextFieldLineEdit::TextFieldLineEdit(

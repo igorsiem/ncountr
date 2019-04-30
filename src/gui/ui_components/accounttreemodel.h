@@ -14,7 +14,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
-#include "document.h"
+#include "../document.h"
 
 #ifndef _gui_accounttreemodel_h_included
 #define _gui_accounttreemodel_h_included

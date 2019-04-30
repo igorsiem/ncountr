@@ -17,7 +17,7 @@ using namespace fmt::literals;
 
 #include <qlib/qlib.h>
 
-#include "../error_handling.h"
+#include "../utils/error_handling.h"
 #include "../mainwindow.h"
 #include "ui_mainwindow.h"
 

@@ -17,7 +17,7 @@
 #include <QVariant>
 #include <QWidget>
 
-#include "error.h"
+#include "utils/error.h"
 
 #ifndef _gui_textfieldlineedit_h_installed
 #define _gui_textfieldlineedit_h_installed

@@ -1,5 +1,5 @@
 /**
- * \file gui/logging.h
+ * \file gui/utils/logging.h
  * Declare logging-related functionality, based on qLib and the config
  * 
  * \author Igor Siemienowicz
