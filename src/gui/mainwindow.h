@@ -11,6 +11,7 @@
 
 #include <QMainWindow>
 #include <QSettings>
+#include <QTreeView>
 
 #include "accounttreemodel.h"
 #include "config.h"
@@ -204,8 +205,19 @@ class MainWindow : public QMainWindow
     // Note that these method are implemented in the
     // `mainwindow/notifications.cpp` file
 
+    /**
+     * \brief Notify and update various UI elements when a Document is
+     * first created or opened
+     */
     void notifyDocumentOpened(void);
 
+    /**
+     * \brief Notify and update various UI elements when a Document is
+     * closed
+     * 
+     * Note that this method is also called during Document creation and
+     * opening methods just after the old Document is closed.
+     */
     void notifyDocumentClosed(void);
 
     // -- Internal Helper Methods --
@@ -301,6 +313,8 @@ class MainWindow : public QMainWindow
     TextFieldLineEdit* m_descriptionFew;  ///< Editing for the Description
 
     // Account Widgets
+
+    QTreeView* m_accountTreeView;
 
     /**
      * \brief Tree model object for rendering Acccounts information from the

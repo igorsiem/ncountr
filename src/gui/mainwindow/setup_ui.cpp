@@ -72,6 +72,10 @@ void MainWindow::setupTopLevelSplitters(QWidget* parent)
     leftFrame->setFrameStyle(QFrame::Box);
     leftRightSplitter->addWidget(leftFrame);
 
+    m_accountTreeView = new QTreeView(leftFrame);
+    leftFrame->setLayout(new QVBoxLayout(leftFrame));
+    leftFrame->layout()->addWidget(m_accountTreeView);
+
     auto rightFrame = new QFrame(leftRightSplitter);
     rightFrame->setFrameStyle(QFrame::Box);
     leftRightSplitter->addWidget(rightFrame);

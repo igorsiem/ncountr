@@ -22,6 +22,11 @@ namespace logging {
  */
 using level_t = qlib::logger::level_t;
 
+const level_t debug = level_t::debug;   ///< Constant for debug logging
+const level_t info = level_t::info; ///< Constant for info logging
+const level_t warning = level_t::warning;   ///< Constant for warning logging
+const level_t error = level_t::error;   ///< Constant for error logging
+
 /**
  * \brief Retrieve the logging interface
  * 
@@ -40,6 +45,44 @@ inline qlib::logger& logger(void) { return qlib::logger::instance(); }
  */
 extern void setup(const bst::po::variables_map& vm);
 
-}   // end log namespace
+}   // end logging namespace
+
+/**
+ * \brief A convenience macro for logging a message at any level
+ */
+#define ENC_LOG( level, msg ) \
+    ::logging::logger().log(level, msg )
+
+/**
+ * \brief A convenience macro for expressing the standard `__FUNCTION__`
+ * macro as a std::wstring
+ */
+#define __WFUNCTION__ boost::lexical_cast<std::wstring>(__FUNCTION__)
+
+/**
+ * \brief Convenience macro for logging an error message
+ */
+#define ENC_LOG_ERROR( msg ) \
+    ENC_LOG(logging::error, msg))
+
+/**
+ * \brief Convenience macro for logging a warning message
+ */
+#define ENC_LOG_WARNING( msg ) \
+    ENC_LOG(logging::warning, msg))
+
+/**
+ * \brief Convenience macro for logging an info message
+ */
+#define ENC_LOG_INFO( msg ) \
+    ENC_LOG(logging::info, msg))
+
+/**
+ * \brief Convenience macro for logging a debug message
+ * 
+ * Note that the standard __FUNCTION__ string is prepended to the message
+ */
+#define ENC_LOG_DEBUG( msg ) \
+    ENC_LOG(logging::debug, L"{} - {}"_format(__WFUNCTION__, msg))
 
 #endif

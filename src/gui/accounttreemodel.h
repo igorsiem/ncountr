@@ -319,8 +319,7 @@ class AccountTreeModel : public QAbstractItemModel
      */
     Document& m_document;
 
-    // The list of Items at the root
-    ItemsVec m_items;
+    ItemsVec m_items;   ///< The list of Items at the root
 
 };  // end AccountTreeModel class
 

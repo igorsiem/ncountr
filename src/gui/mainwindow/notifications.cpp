@@ -20,12 +20,20 @@ void MainWindow::notifyDocumentOpened(void)
     m_descriptionFew->updateFromField();
     m_descriptionFew->setCanEdit(true);
 
+    if (m_accountTreeModel) delete m_accountTreeModel;
+    m_accountTreeModel = new AccountTreeModel(*m_document, this);
+    m_accountTreeView->setModel(m_accountTreeModel);
+
     // TODO set up other UI elements
 
 }   // end notifyDocumentOpened method
 
 void MainWindow::notifyDocumentClosed(void)
 {
+
+    m_accountTreeView->setModel(nullptr);
+    delete m_accountTreeModel;
+    m_accountTreeModel = nullptr;
 
     setWindowTitleMessage();
     m_nameFew->updateFromField();

@@ -11,6 +11,7 @@
 
 #include "../api/sqlite_datastore/db_utils.h"
 #include "accounttreemodel.h"
+#include "logging.h"
 
 AccountTreeModel::AccountTreeModel(
         Document& document
@@ -127,7 +128,22 @@ QString AccountTreeModel::Item::fullPath(void) const
     // If we have a parent Item, get its full path, and add a trailing
     // separator
     QString parentPath;
+
     auto parent = parentItem.lock();
+
+    if (parent)
+        logging::logger().log(
+            logging::level_t::debug
+            , L"fullPath - we have a parent");
+    else
+        logging::logger().log(
+            logging::level_t::debug
+            , L"fullPath - NO PARENT");
+
+    logging::logger().log(
+        logging::level_t::debug
+        , (QString("fullPath - name = ") + name).toStdWString());
+
     if (parent)
         parentPath = parent->fullPath()
                     + QString::fromStdWString(
@@ -151,21 +167,29 @@ AccountTreeModel::Item::ItemsVec AccountTreeModel::Item::generateItemsVec(
         , ItemSpr parent
         , Document& doc)
 {
+
+    ENC_LOG_DEBUG(L"accounts argument has size {}"_format(accounts.size()));
+
     ItemsVec items;
 
     for (auto ac : accounts)
+    {
         items.push_back(
             std::make_shared<Item>(
                 QString::fromStdWString(ac->name())
                 , parent
                 , doc
                 , items.size()));
+    }
+    
 
     // Sort the items by Account Name
     std::sort(
         items.begin()
         , items.end()
         , [](ItemSpr a, ItemSpr b) { return a->name < b->name; });
+
+    return items;
 
 }   // end generateItemsVec method
 
@@ -176,11 +200,13 @@ AccountTreeModel::ItemsVec AccountTreeModel::Item::generateFullTree(
     // Generate the initial list of Items from the root of the document or
     // from the children of the parent
     ItemsVec result;
-    if (parent) result = generateItemsVec(doc.rootAccounts(), nullptr, doc);
-    else generateItemsVec(parent->account()->children(), parent, doc);
+    if (parent)
+        result =
+            generateItemsVec(parent->account()->children(), parent, doc);
+    else result = generateItemsVec(doc.rootAccounts(), nullptr, doc);
 
     // For each item generated, call recursively for the descendant accounts
-    for (auto it : result) generateFullTree(doc, it);
+    for (auto it : result) it->childItems = generateFullTree(doc, it);
 
     return result;
 }   // end generateFullTree
