@@ -68,6 +68,7 @@ void MainWindow::executeFileNewFile(void)
             // Note that we have to explicitly release the database before
             // recreating it, so that connections are cleaned up before new
             // ones are created.
+            notifyDocumentAboutToClose();
             m_document = nullptr;
             notifyDocumentClosed();
 
@@ -127,6 +128,7 @@ void MainWindow::executeFileOpenFile(void)
             // Note that we have to explicitly release the database before
             // recreating it, so that connections are cleaned up before new
             // ones are created.
+            notifyDocumentAboutToClose();
             m_document = nullptr;
             notifyDocumentClosed();
 
@@ -157,7 +159,10 @@ void MainWindow::executeFileCloseFile(void)
     ACTION_TRY
     {
 
+        notifyDocumentAboutToClose();
         m_document = nullptr;
+        notifyDocumentClosed();
+
         QString msg = tr("document closed");
 
         logging::logger().log(
@@ -165,8 +170,6 @@ void MainWindow::executeFileCloseFile(void)
             , msg.toStdWString());
 
         ui->statusBar->showMessage(msg, 5000);
-
-        notifyDocumentClosed();
 
     }
     ACTION_CATCH_DURING("Close File")
@@ -176,8 +179,6 @@ void MainWindow::executeFileExitApplication(void)
 {
     ACTION_TRY
     {
-        m_document = nullptr;
-        notifyDocumentClosed();
 
         close();
     }

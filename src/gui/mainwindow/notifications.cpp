@@ -28,12 +28,15 @@ void MainWindow::notifyDocumentOpened(void)
 
 }   // end notifyDocumentOpened method
 
-void MainWindow::notifyDocumentClosed(void)
+void MainWindow::notifyDocumentAboutToClose(void)
 {
-
     m_accountTreeView->setModel(nullptr);
     delete m_accountTreeModel;
     m_accountTreeModel = nullptr;
+}   // end notifyDocumentAboutToClose
+
+void MainWindow::notifyDocumentClosed(void)
+{
 
     setWindowTitleMessage();
     m_nameFew->updateFromField();

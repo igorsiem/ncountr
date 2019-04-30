@@ -43,6 +43,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     m_settings.setValue("windowState", saveState());
     m_settings.endGroup();    
 
+    // Close the document with notifications
+    notifyDocumentAboutToClose();
+    m_document = nullptr;
+    notifyDocumentClosed();
+
     QMainWindow::closeEvent(event);
 
 }   // end closeEvent

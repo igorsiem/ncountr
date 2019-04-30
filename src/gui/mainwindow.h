@@ -206,13 +206,19 @@ class MainWindow : public QMainWindow
     // `mainwindow/notifications.cpp` file
 
     /**
-     * \brief Notify and update various UI elements when a Document is
+     * \brief Notify and update various UI elements just after a Document is
      * first created or opened
      */
     void notifyDocumentOpened(void);
 
     /**
-     * \brief Notify and update various UI elements when a Document is
+     * \brief Notify and update various UI elements just before a Document
+     * is about to close
+     */
+    void notifyDocumentAboutToClose(void);
+
+    /**
+     * \brief Notify and update various UI elements after a Document is
      * closed
      * 
      * Note that this method is also called during Document creation and
