@@ -82,45 +82,6 @@ class datastore
      */
     virtual void set_description(std::wstring d) = 0;
 
-    // -- Account-related methods --
-
-///    /**
-///     * \brief Find an account by its full path
-///     * 
-///     * \param path The path of the account, from the root
-///     * 
-///     * \return A shared pointer to the Account object or `nullptr`, if no
-///     * account with this name exists
-///     */
-///    virtual account_spr find_account_by_path(std::wstring path) = 0;
-///
-///    /**
-///     * \brief Find all Accounts that have a given Parent
-///     * 
-///     * \param parent_path The Parent Path; this may be an empty string, in
-///     * which case the accounts at the root are returned
-///     * 
-///     * \return A (possibly empty) collection of the child accounts of the
-///     * given parent
-///     */
-///    virtual accounts_by_path_map find_accounts_with_parent(
-///        std::wstring parent_path) = 0;
-///
-///    /**
-///     * \brief Retrieve all the Accounts at the root
-///     * 
-///     * Implementations of this method should have the same effect as
-///     * `find_accounts_with_parent(L"")`.
-///     */
-///    virtual accounts_by_path_map accounts_at_root(void) = 0;
-///
-///    /**
-///     * \brief Retrieve all the Accounts of a given type (asset, liability,
-///     * income or expense)
-///     */
-///    virtual accounts_by_path_map find_accounts_with_type(
-///        account::type_t t) = 0;
-
 };  // end datastore class
 
 /**

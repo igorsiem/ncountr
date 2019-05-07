@@ -15,6 +15,7 @@
 
 #include "account.h"
 #include "logging.h"
+#include "db_utils.h"
 
 namespace ncountr { namespace datastores { namespace sqlite {
 
@@ -70,18 +71,20 @@ void account::initialise(QSqlDatabase& db)
                                 ", opening_balance REAL DEFAULT NULL"
                             ");";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
+///    logger().log(
+///        level_t::debug
+///        , L"query: {}"_format(queryString.toStdWString()));
 
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(tr("query preparation error: ") +
-            query.lastError().text());
+///    if (!query.prepare(queryString))
+///        throw error(tr("query preparation error: ") +
+///            query.lastError().text());
+///
+///    if (!query.exec())
+///        throw error(tr("query execution error: ") +
+///            query.lastError().text());
 
-    if (!query.exec())
-        throw error(tr("query execution error: ") +
-            query.lastError().text());
+    prepareAndExecute(query, queryString);
 
     // TODO add indices
 
@@ -121,20 +124,22 @@ int account::max_id(QSqlDatabase& db)
 
     QString queryString = "SELECT MAX(id) AS max_id FROM account";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
+///    logger().log(
+///        level_t::debug
+///        , L"query: {}"_format(queryString.toStdWString()));
 
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(
-            tr("query preparation error: ")
-            + query.lastError().text());
+///    if (!query.prepare(queryString))
+///        throw error(
+///            tr("query preparation error: ")
+///            + query.lastError().text());
+///
+///    if (!query.exec())
+///        throw error(
+///            tr("query execution error: ")
+///            + query.lastError().text());
 
-    if (!query.exec())
-        throw error(
-            tr("query execution error: ")
-            + query.lastError().text());
+    prepareAndExecute(query, queryString);
 
     // We should have at least one record
     if (!query.next())
@@ -171,31 +176,21 @@ void account::create_record(
             ", :type"
         ");";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-    
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(tr("query preparation error: ") +
-            query.lastError().text());
 
-    // Value-binding
-    query.bindValue(":id", QVariant(id), QSql::In);
-    query.bindValue(":full_path", QVariant(full_path), QSql::In);
+    QVariant desc(QVariant::String);
+    if (description != boost::none)
+        desc = *description;
 
-    if (description == boost::none)
-        query.bindValue(
-            ":description"
-            , QVariant(QVariant::String)
-            , QSql::In);
-    else query.bindValue(":description", QVariant(*description), QSql::In);
+    prepareAndExecute(
+        query
+        , queryString
+        , {
+            { ":id", id }
+            , { ":full_path" , full_path }
+            , { ":description", desc}
+            , { ":type", to_qstring(t) } });
 
-    query.bindValue(":type", QVariant(to_qstring(t)), QSql::In);
-
-     if (!query.exec())
-         throw error(tr("query execution error: ") +
-            query.lastError().text());
 }   // end create_record method
 
 void account::create_record(
@@ -225,22 +220,8 @@ boost::optional<QSqlRecord> account::find_by_id(
 
     QString queryString = "SELECT * FROM account WHERE id = :id";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(
-            tr("query preparation error: ")
-            + query.lastError().text());
-
-    query.bindValue(":id", QVariant(id), QSql::In);
-
-    if (!query.exec())
-        throw error(
-            tr("query execution error: ")
-            + query.lastError().text());
+    prepareAndExecute(query, queryString, {{":id", id}});
 
     if (query.next()) return query.record();
     else return boost::none;
@@ -258,27 +239,12 @@ boost::optional<QSqlRecord> account::find_by_full_path(
     QString queryString =
         "SELECT * FROM account WHERE full_path = :full_path";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
 
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(
-            tr("query preparation error: ")
-            + query.lastError().text());
-
-    query.bindValue(":full_path", QVariant(full_path), QSql::In);
-
-    if (!query.exec())
-        throw error(
-            tr("query execution error: ")
-            + query.lastError().text());
+    prepareAndExecute(query, queryString, {{":full_path", full_path}});
 
     if (query.next()) return query.record();
     else return boost::none;
-
-///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 }
 
 void account::destroy_record_by_id(QSqlDatabase& db, int id)
@@ -289,22 +255,8 @@ void account::destroy_record_by_id(QSqlDatabase& db, int id)
 
     QString queryString = "DELETE FROM account WHERE id = :id";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(
-            tr("query preparation error: ")
-            + query.lastError().text());
-
-    query.bindValue(":id", QVariant(id), QSql::In);
-
-    if (!query.exec())
-        throw error(
-            tr("query execution error: ")
-            + query.lastError().text());
+    prepareAndExecute(query, queryString, {{":id", id}});
 
 }   // end destroy_record_by_id
 
@@ -317,22 +269,8 @@ void account::destroy_record_by_full_path(
 
     QString queryString = "DELETE FROM account WHERE full_path = :full_path";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(
-            tr("query preparation error: ")
-            + query.lastError().text());
-
-    query.bindValue(":full_path", QVariant(full_path), QSql::In);
-
-    if (!query.exec())
-        throw error(
-            tr("query execution error: ")
-            + query.lastError().text());
+    prepareAndExecute(query, queryString, {{":full_path", full_path}});
 
 }   // end destroy_record_by_full_path method
 

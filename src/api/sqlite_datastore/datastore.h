@@ -238,6 +238,9 @@ class datastore : public api::datastore
             , whereClause);
     }   // end updateSingleRecordFieldValue template method
 
+    /**
+     * \brief Retrieve the underlying Database object for the Datastore
+     */
     QSqlDatabase& db(void)
     {
         if (!is_ready())

@@ -23,6 +23,10 @@
 
 namespace ncountr { namespace datastores { namespace sqlite {
 
+/**
+ * \brief An exception class for signalling an error condition in the
+ * database utilities functionality
+ */
 class DbUtilsError : public api::error
 {
     public:
@@ -52,6 +56,39 @@ class DbUtilsError : public api::error
  * Call the text-translation function for the Database Utililities library
  */
 #define DB_UTILS_TR( msg ) QCoreApplication::translate("dbutils", msg)
+
+/**
+ * \brief Generic query execution with bind values
+ * 
+ * \param query The query object to use, which should already be associated
+ * with a database
+ * 
+ * \param queryString The full query string
+ * 
+ * \param bindings A map of bind symbol names and their values; these must
+ * correspond to the bindings specified in `queryString`
+ */
+inline void prepareAndExecute(
+        QSqlQuery& query
+        , const QString& queryString
+        , const std::map<QString, QVariant>& bindings = {})
+{
+
+    logger().log(
+        level_t::debug
+        , L"query: {}"_format(queryString.toStdWString()));
+    
+    if (!query.prepare(queryString))
+        throw DbUtilsError(DB_UTILS_TR("query preparation error: ") +
+            query.lastError().text());
+ 
+    for (auto bv : bindings) query.bindValue(bv.first, bv.second);
+
+    if (!query.exec())
+        throw DbUtilsError(DB_UTILS_TR("query execution error: ") +
+            query.lastError().text());
+
+}   // end prepareAndExecute
 
 /**
  * \brief Retrieve a single field value from a single record in a database
@@ -89,20 +126,8 @@ T retrieveSingleRecordFieldValue(
         + " FROM " + tableName
         + " WHERE " + whereClause;
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw DbUtilsError(
-            DB_UTILS_TR("query preparation error: ")
-            + query.lastError().text());
-
-    if (!query.exec())
-        throw DbUtilsError(
-            DB_UTILS_TR("query execution error: ")
-            + query.lastError().text());
+    prepareAndExecute(query, queryString);
 
     // We should have at least one record
     if (!query.next())
@@ -150,20 +175,8 @@ void updateSingleRecordFieldValue(
                             + " SET " + fieldName + " = :v"
                             " WHERE " + whereClause;
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-    
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw DbUtilsError(DB_UTILS_TR("query preparation error: ") +
-            query.lastError().text());
- 
-     query.bindValue(":v", QVariant(value), QSql::In);
- 
-     if (!query.exec())
-         throw DbUtilsError(DB_UTILS_TR("query execution error: ") +
-             query.lastError().text());
+    prepareAndExecute(query, queryString, {{":v", value}});
 
 }   // end updateSingleRecordFieldValue template function
 

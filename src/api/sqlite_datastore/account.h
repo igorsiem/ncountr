@@ -80,12 +80,6 @@ class account : public api::account
      */
     using account_spr = std::shared_ptr<account>;
 
-///    /**
-///     * \brief An invocable object for notifying external components that this
-///     * object is being deleted; the argument is a reference to self
-///     */
-///    using DestructNotifierFn = std::function<void(account&)>;
-
     /**
      * \brief Constructor for an Account that references an existing Record
      * 
@@ -101,6 +95,10 @@ class account : public api::account
         QSqlDatabase& db
         , int id);
 
+    /**
+     * \brief Create a new Income or Expense Account object (along with the
+     * underlying Record)
+     */
     static account_spr make_new(
         QSqlDatabase& db
         , QString name
@@ -108,6 +106,10 @@ class account : public api::account
         , account_spr parent
         , boost::optional<QString> description);
 
+    /**
+     * \brief Create a new Asset or Liability Account object (along with the
+     * underlying Record)
+     */
     static account_spr make_new(
         QSqlDatabase& db
         , QString name
@@ -117,6 +119,9 @@ class account : public api::account
         , ncountr::api::date od
         , ncountr::api::currency_t ob);
 
+    /**
+     * \brief Find an existing Account object, given its Full Path
+     */
     static account_spr find_existing(QString path);
 
     /**
@@ -175,20 +180,9 @@ class account : public api::account
             QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
-///    /**
-///     *  \brief Set the full path of the parent Account
-///     * 
-///     * If this is an empty string, the Account is at the root.
-///     * 
-///     * Parent paths are always assumed to begin at the root, and need not
-///     * start with the `account_path_separator`.
-///     */
-///    virtual void set_parent_path(std::wstring& p) override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
-///    }
-
+    /**
+     * \brief Set the Parent Account of the Account
+     */
     virtual void set_parent(account_spr parent)
     {
         throw error(
@@ -249,12 +243,22 @@ class account : public api::account
             QString(__FUNCTION__) + tr(" function not implemented yet"));
     }    
 
+    /**
+     * \brief Set the account type (for income and expense accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_account_type(type_t t) override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
+    /**
+     * \brief Set the account type (for asset and liability accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_account_type(
             type_t t
             , ncountr::api::date opening_date
@@ -264,32 +268,54 @@ class account : public api::account
             QString(__FUNCTION__) + tr(" function not implemented yet"));        
     }
 
+    /**
+     * \brief Retrieve the opening date (for asset and liability accounts)
+     */
     virtual ncountr::api::date opening_date(void) const override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));        
     }
 
+    /**
+     * \brief Set the opening date (for asset and liability accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_opening_date(ncountr::api::date od) override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));        
     }
 
+    /**
+     * \brief Retrieve the opening balance (for asset and liability accounts)
+     */
     virtual ncountr::api::currency_t opening_balance(void) const override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));        
     }
 
+    /**
+     * \brief Set the opening balance (for asset and liability accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_opening_balance(ncountr::api::currency_t ob) override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));        
     }
 
+    /**
+     * \brief Convert an Account Type enumerator to a human-readable QString
+     */
     static QString to_qstring(type_t t);
 
+    /**
+     * \brief Convert a human-readable QString to an Account Type enumerator
+     */
     static type_t to_account_type(QString str);
 
     // -- Lower-level Database Services --
@@ -301,10 +327,20 @@ class account : public api::account
     // All business rule checks are done in the methods that call these
     // lower-level methods
 
+    /**
+     * \brief Retrieve the maximum ID of all Account records
+     */
     int max_id(void) const;
 
+    /**
+     * \brief Retrieve the maximum ID of all Account records in a given
+     * database
+     */
     static int max_id(QSqlDatabase& db);
 
+    /**
+     * \brief Create an Income or Expense Account record
+     */
     static void create_record(
         QSqlDatabase& db
         , int id
@@ -312,6 +348,9 @@ class account : public api::account
         , boost::optional<QString> description
         , type_t t);
 
+    /**
+     * \brief Create an Asset or Liability Account record
+     */
     static void create_record(
         QSqlDatabase& db
         , int id
@@ -321,16 +360,28 @@ class account : public api::account
         , ncountr::api::date od
         , ncountr::api::currency_t ob);
 
+    /**
+     * \brief Find an Account record by its ID
+     */
     static boost::optional<QSqlRecord> find_by_id(
         QSqlDatabase& db
         , int id);
 
+    /**
+     * \brief Find an Account record by its full path
+     */
     static boost::optional<QSqlRecord> find_by_full_path(
         QSqlDatabase& db
         , QString full_path);
 
+    /**
+     * \brief Destroy an Account record by its ID
+     */
     static void destroy_record_by_id(QSqlDatabase& db, int id);
 
+    /**
+     * \brief Destroy an Account record by its Full Path
+     */
     static void destroy_record_by_full_path(
         QSqlDatabase& db, QString full_path);
 

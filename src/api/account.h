@@ -222,47 +222,45 @@ class account
      */
     virtual type_t account_type(void) const = 0;
 
-///    /**
-///     * \brief Set the account type enumerator (asset, liability, income or
-///     * expense)
-///     * 
-///     * When setting the Account Type to `asset` or `liability`, opening
-///     * info (date and balance) *must* be supplied. When setting it to
-///     * `income` or `expense`, it *must not* be supplied.
-///     */
-///    virtual void set_account_type(
-///        type_t t
-///        , boost::optional<opening_info_t> oi = boost::none) = 0;
-
+    /**
+     * \brief Set the account type (for income and expense accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_account_type(type_t t) = 0;
 
+    /**
+     * \brief Set the account type (for asset and liability accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_account_type(
         type_t t
         , date opening_date
         , currency_t opening_balance) = 0;
 
-///    /**
-///     * \brief Retrieve the (optional) opening information for an Account
-///     * 
-///     * Opening info is *only* available for `asset` or `liability` accounts.
-///     */
-///    virtual opening_info_t opening_info(void) const = 0;
-///
-///    /**
-///     * \brief Set the Opening Date and Balance as an optional tuple
-///     * 
-///     * The opening data may be removed by setting the property to
-///     * `boost::none`. Note that opening info may *only* be present if --
-///     * and only if -- the account type is `asset` or `liability`.
-///     */
-///    virtual void set_opening_info(boost::optional<opening_info_t> oi) = 0;
-
+    /**
+     * \brief Retrieve the opening date (for asset and liability accounts)
+     */
     virtual date opening_date(void) const = 0;
 
+    /**
+     * \brief Set the opening date (for asset and liability accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_opening_date(date od) = 0;
 
+    /**
+     * \brief Retrieve the opening balance (for asset and liability accounts)
+     */
     virtual currency_t opening_balance(void) const = 0;
 
+    /**
+     * \brief Set the opening balance (for asset and liability accounts)
+     * 
+     * \todo Expand documentation about enforcing business rules
+     */
     virtual void set_opening_balance(currency_t ob) = 0;
 
 };  // end account class
