@@ -110,18 +110,8 @@ void datastore::initialise(QSqlDatabase& db)
             ", file_format_version INTEGER"
         ");";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-
     QSqlQuery query(db);
-    if (!query.prepare(queryString))
-        throw error(tr("query preparation error: ") +
-            query.lastError().text());
-
-    if (!query.exec())
-        throw error(tr("query execution error: ") +
-            query.lastError().text());
+    prepareAndExecute(query, queryString);
 
     queryString = "INSERT INTO document_info ("
                         "id"
@@ -130,21 +120,16 @@ void datastore::initialise(QSqlDatabase& db)
                         ", file_format_version"
                     ") VALUES ("
                         "1"
-                        ", '<Document Name>'"
-                        ", '<Document Description>'"
+                        ", :name"
+                        ", :description"
                         ", 1);";
 
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-    
-    if (!query.prepare(queryString))
-        throw error(tr("query preparation error: ") +
-            query.lastError().text());
-
-    if (!query.exec())
-        throw error(tr("query execution error: ") +
-            query.lastError().text());
+    prepareAndExecute(
+        query
+        , queryString
+        , {
+            {":name", tr("<Document Name>")}
+            , { ":description", tr("<Document Description>")}});
 
     logger().log(level_t::debug, L"new datastore initialised");
 
