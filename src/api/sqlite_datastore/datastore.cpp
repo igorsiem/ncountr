@@ -13,6 +13,7 @@
 
 #include "account.h"
 #include "datastore.h"
+#include "db_utils.h"
 
 namespace ncountr { namespace datastores { namespace sqlite {
 
@@ -148,7 +149,7 @@ void datastore::initialise(QSqlDatabase& db)
     logger().log(level_t::debug, L"new datastore initialised");
 
     // Now lay out the other tables - handled by other classes
-    account::initialise(db);
+///    account::initialise(db);
 }   // end initialise method
 
 QDate to_qdate(ncountr::api::date d)

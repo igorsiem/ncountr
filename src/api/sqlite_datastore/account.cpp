@@ -62,31 +62,20 @@ account::~account(void)
 
 void account::initialise(QSqlDatabase& db)
 {
-    QString queryString = "CREATE TABLE account ("
-                                "id INTEGER PRIMARY KEY"
-                                ", full_path TEXT UNIQUE NOT NULL"
-                                ", description TEXT"
-                                ", account_type TEXT NOT NULL"
-                                ", opening_date INTEGER DEFAULT NULL"
-                                ", opening_balance REAL DEFAULT NULL"
-                            ");";
-
-///    logger().log(
-///        level_t::debug
-///        , L"query: {}"_format(queryString.toStdWString()));
-
-    QSqlQuery query(db);
-///    if (!query.prepare(queryString))
-///        throw error(tr("query preparation error: ") +
-///            query.lastError().text());
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
+///    QString queryString = "CREATE TABLE account ("
+///                                "id INTEGER PRIMARY KEY"
+///                                ", full_path TEXT UNIQUE NOT NULL"
+///                                ", description TEXT"
+///                                ", account_type TEXT NOT NULL"
+///                                ", opening_date INTEGER DEFAULT NULL"
+///                                ", opening_balance REAL DEFAULT NULL"
+///                            ");";
 ///
-///    if (!query.exec())
-///        throw error(tr("query execution error: ") +
-///            query.lastError().text());
-
-    prepareAndExecute(query, queryString);
-
-    // TODO add indices
+///    QSqlQuery query(db);
+///    prepareAndExecute(query, queryString);
+///
+///    // TODO add indices
 
 }   // end initialise method
 
@@ -118,37 +107,25 @@ int account::max_id(void) const
 
 int account::max_id(QSqlDatabase& db)
 {
-    if (!db.isOpen())
-        throw error(tr("attempt to retrieve max Account Record ID from "
-            "Database that is not open"));
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-    QString queryString = "SELECT MAX(id) AS max_id FROM account";
-
-///    logger().log(
-///        level_t::debug
-///        , L"query: {}"_format(queryString.toStdWString()));
-
-    QSqlQuery query(db);
-///    if (!query.prepare(queryString))
-///        throw error(
-///            tr("query preparation error: ")
-///            + query.lastError().text());
+///    if (!db.isOpen())
+///        throw error(tr("attempt to retrieve max Account Record ID from "
+///            "Database that is not open"));
 ///
-///    if (!query.exec())
-///        throw error(
-///            tr("query execution error: ")
-///            + query.lastError().text());
-
-    prepareAndExecute(query, queryString);
-
-    // We should have at least one record
-    if (!query.next())
-        throw error(tr("could not access retrieve record"));
-
-    int idx = query.record().indexOf("max_id");
-
-    if (query.isNull(idx)) return 0;
-    else return query.value(idx).value<int>();
+///    QString queryString = "SELECT MAX(id) AS max_id FROM account";
+///
+///    QSqlQuery query(db);
+///    prepareAndExecute(query, queryString);
+///
+///    // We should have at least one record
+///    if (!query.next())
+///        throw error(tr("could not access retrieve record"));
+///
+///    int idx = query.record().indexOf("max_id");
+///
+///    if (query.isNull(idx)) return 0;
+///    else return query.value(idx).value<int>();
 }   // end max_id
 
 void account::create_record(
@@ -158,39 +135,41 @@ void account::create_record(
         , boost::optional<QString> description
         , type_t t)
 {
-    if (!db.isOpen())
-        throw error(tr("attempt to create a new Account record for a "
-            "Database that is not open"));
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-    // Set up the query
-    QString queryString =
-        "INSERT INTO account ("
-            "id"
-            ", full_path"
-            ", description"
-            ", account_type"
-        ") VALUES ("
-            ":id"
-            ", :full_path"
-            ", :description"
-            ", :type"
-        ");";
-
-    QSqlQuery query(db);
-
-    QVariant desc(QVariant::String);
-    if (description != boost::none)
-        desc = *description;
-
-    prepareAndExecute(
-        query
-        , queryString
-        , {
-            { ":id", id }
-            , { ":full_path" , full_path }
-            , { ":description", desc}
-            , { ":type", to_qstring(t) } });
-
+///    if (!db.isOpen())
+///        throw error(tr("attempt to create a new Account record for a "
+///            "Database that is not open"));
+///
+///    // Set up the query
+///    QString queryString =
+///        "INSERT INTO account ("
+///            "id"
+///            ", full_path"
+///            ", description"
+///            ", account_type"
+///        ") VALUES ("
+///            ":id"
+///            ", :full_path"
+///            ", :description"
+///            ", :type"
+///        ");";
+///
+///    QSqlQuery query(db);
+///
+///    QVariant desc(QVariant::String);
+///    if (description != boost::none)
+///        desc = *description;
+///
+///    prepareAndExecute(
+///        query
+///        , queryString
+///        , {
+///            { ":id", id }
+///            , { ":full_path" , full_path }
+///            , { ":description", desc}
+///            , { ":type", to_qstring(t) } });
+///
 }   // end create_record method
 
 void account::create_record(
@@ -202,9 +181,9 @@ void account::create_record(
         , ncountr::api::date od
         , ncountr::api::currency_t ob)
 {
-    if (!db.isOpen())
-        throw error(tr("attempt to create a new Account record for a "
-            "Database that is not open"));
+///    if (!db.isOpen())
+///        throw error(tr("attempt to create a new Account record for a "
+///            "Database that is not open"));
 
     throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 }
@@ -213,64 +192,72 @@ boost::optional<QSqlRecord> account::find_by_id(
         QSqlDatabase& db
         , int id)
 {
-    
-    if (!db.isOpen())
-        throw error(tr("attempt to find an Account record in a Database "
-            "that is not open"));
 
-    QString queryString = "SELECT * FROM account WHERE id = :id";
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-    QSqlQuery query(db);
-    prepareAndExecute(query, queryString, {{":id", id}});
-
-    if (query.next()) return query.record();
-    else return boost::none;
-
+///    if (!db.isOpen())
+///        throw error(tr("attempt to find an Account record in a Database "
+///            "that is not open"));
+///
+///    QString queryString = "SELECT * FROM account WHERE id = :id";
+///
+///    QSqlQuery query(db);
+///    prepareAndExecute(query, queryString, {{":id", id}});
+///
+///    if (query.next()) return query.record();
+///    else return boost::none;
+///
 }   // end find_by_id method
 
 boost::optional<QSqlRecord> account::find_by_full_path(
         QSqlDatabase& db
         , QString full_path)
 {
-    if (!db.isOpen())
-        throw error(tr("attempt to find an Account record in a Database "
-            "that is not open"));
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-    QString queryString =
-        "SELECT * FROM account WHERE full_path = :full_path";
-
-
-    QSqlQuery query(db);
-    prepareAndExecute(query, queryString, {{":full_path", full_path}});
-
-    if (query.next()) return query.record();
-    else return boost::none;
-}
+///    if (!db.isOpen())
+///        throw error(tr("attempt to find an Account record in a Database "
+///            "that is not open"));
+///
+///    QString queryString =
+///        "SELECT * FROM account WHERE full_path = :full_path";
+///
+///
+///    QSqlQuery query(db);
+///    prepareAndExecute(query, queryString, {{":full_path", full_path}});
+///
+///    if (query.next()) return query.record();
+///    else return boost::none;
+}   // end find_by_full_path method
 
 void account::destroy_record_by_id(QSqlDatabase& db, int id)
 {
-    if (!db.isOpen())
-        throw error(tr("attempt to destroy an Account record in a Database "
-            "that is not open"));
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-    QString queryString = "DELETE FROM account WHERE id = :id";
-
-    QSqlQuery query(db);
-    prepareAndExecute(query, queryString, {{":id", id}});
-
+///    if (!db.isOpen())
+///        throw error(tr("attempt to destroy an Account record in a Database "
+///            "that is not open"));
+///
+///    QString queryString = "DELETE FROM account WHERE id = :id";
+///
+///    QSqlQuery query(db);
+///    prepareAndExecute(query, queryString, {{":id", id}});
+///
 }   // end destroy_record_by_id
 
 void account::destroy_record_by_full_path(
         QSqlDatabase& db, QString full_path)
 {
-    if (!db.isOpen())
-        throw error(tr("attempt to destroy an Account record in a Database "
-            "that is not open"));
+///    if (!db.isOpen())
+///        throw error(tr("attempt to destroy an Account record in a Database "
+///            "that is not open"));
+///
+///    QString queryString = "DELETE FROM account WHERE full_path = :full_path";
+///
+///    QSqlQuery query(db);
+///    prepareAndExecute(query, queryString, {{":full_path", full_path}});
 
-    QString queryString = "DELETE FROM account WHERE full_path = :full_path";
-
-    QSqlQuery query(db);
-    prepareAndExecute(query, queryString, {{":full_path", full_path}});
+    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
 }   // end destroy_record_by_full_path method
 

@@ -13,7 +13,12 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 #include <QString>
+#include <QVariant>
+
+#include <fmt/format.h>
+using namespace fmt::literals;
 
 #include "../api.h"
 #include "logging.h"
@@ -68,27 +73,10 @@ class DbUtilsError : public api::error
  * \param bindings A map of bind symbol names and their values; these must
  * correspond to the bindings specified in `queryString`
  */
-inline void prepareAndExecute(
+void prepareAndExecute(
         QSqlQuery& query
         , const QString& queryString
-        , const std::map<QString, QVariant>& bindings = {})
-{
-
-    logger().log(
-        level_t::debug
-        , L"query: {}"_format(queryString.toStdWString()));
-    
-    if (!query.prepare(queryString))
-        throw DbUtilsError(DB_UTILS_TR("query preparation error: ") +
-            query.lastError().text());
- 
-    for (auto bv : bindings) query.bindValue(bv.first, bv.second);
-
-    if (!query.exec())
-        throw DbUtilsError(DB_UTILS_TR("query execution error: ") +
-            query.lastError().text());
-
-}   // end prepareAndExecute
+        , const std::map<QString, QVariant>& bindings = {});
 
 /**
  * \brief Retrieve a single field value from a single record in a database
