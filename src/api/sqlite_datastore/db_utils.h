@@ -133,8 +133,9 @@ T retrieveSingleRecordFieldValue(
  * be called repeatedly to update several values at once, as it is not very
  * efficient (constructs and executes a whole query).
  * 
- * Note: *it is possible to use this method to make records that break the
- * nCountr business rules, so use this method with care!*
+ * Note: *Business Rules are not checked by this method, so it is possible to
+ * use this method to make records that break the rules. Use this method with
+ * care!*
  * 
  * \tparam T The type of the value to set; this should be a type that is
  * convertible to `QVariant`

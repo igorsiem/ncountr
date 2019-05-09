@@ -464,8 +464,8 @@ TEST_CASE("sqlite account table", "[unit]")
                     , "salary description")
                 , api::error);
 
-            FAIL("tests are incomplete - exception cases");
-        }
+        }   // end exception checks section
 
-    }
+    }   // end mixed account types section
+    
 }   // end Sqlite Account tests

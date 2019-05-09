@@ -422,6 +422,45 @@ class account : public api::account
     ///    , boost::optional<QString> description
     ///    , type_t t);
 
+    /**
+     * \brief Create a Running Balance Account record
+     * 
+     * This is a low-level method for actually creating the database record.
+     * It does not generate an `account` object, but should probably be
+     * called by some method that does this next.
+     * 
+     * Before creating the record, this method checks the following Business
+     * Rules.
+     * 
+     * 1. The Name is a valid Account Name
+     * 
+     * 2. IF a Parent is NOT specified:
+     * 
+     *    a. There must be no other Account Record with the same Name
+     * 
+     * 3. ELSE (i.e. a Parent IS specified)
+     * 
+     *    a. The Parent must exist
+     * 
+     *    b. The Parent must also be a Running Balance Account
+     * 
+     * \param db A reference to the database object
+     * 
+     * \param id The ID of the record; this should always be one larger than
+     * the ID returned by `max_id`
+     * 
+     * \param name The Name of the new Account; this must conform to the
+     * Business Rules
+     * 
+     * \param parent_id If this is `boost::none`, then the Account is placed
+     * at the root; otherwise, this must be the ID of the Parent record
+     * 
+     * \param description Human-readable description of the Account
+     * 
+     * \param opening_data The opening date of the Account
+     * 
+     * \param opening_balance The opening balance of the Account
+     */
     static void create_record(
         QSqlDatabase& db
         , int id
@@ -431,6 +470,42 @@ class account : public api::account
         , QDate opening_date
         , double opening_balance);
 
+    /**
+     * \brief Create an Incoming / Outgoing Funds (Non-Running Balance)
+     * Account record
+     * 
+     * This is a low-level method for actually creating the database record.
+     * It does not generate an `account` object, but should probably be
+     * called by some method that does this next.
+     * 
+     * Before creating the record, this method checks the following Business
+     * Rules.
+     * 
+     * 1. The Name is a valid Account Name
+     * 
+     * 2. IF a Parent is NOT specified:
+     * 
+     *    a. There must be no other Account record with the same Name
+     * 
+     * 3. ELSE (i.e. a Parent IS specified)
+     * 
+     *    a. The Parent must exist
+     * 
+     *    b. The Parent must also be a Non-Running Balance Account
+     * 
+     * \param db A reference to the database object
+     * 
+     * \param id The ID of the record; this should always be one larger than
+     * the ID returned by `max_id`
+     * 
+     * \param name The Name of the new Account; this must conform to the
+     * Business Rules
+     * 
+     * \param parent_id If this is `boost::none`, then the Account is placed
+     * at the root; otherwise, this must be the ID of the Parent record
+     * 
+     * \param description Human-readable description of the Account
+     */
     static void create_record(
         QSqlDatabase& db
         , int id

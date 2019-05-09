@@ -148,6 +148,10 @@ void account::create_record(
         throw error(tr("attempt to create a new Account record in a "
             "Database that is not open"));
 
+    // Make sure the name is valid.
+    if (!valid_name(name.toStdWString()))
+        throw error(tr("invalid account name - ") + name);
+
     QSqlQuery query(db);
     QString queryString;
 
@@ -250,6 +254,10 @@ void account::create_record(
     if (!db.isOpen())
         throw error(tr("attempt to create a new Account record in a "
             "Database that is not open"));
+
+    // Make sure the name is valid.
+    if (!valid_name(name.toStdWString()))
+        throw error(tr("invalid account name - ") + name);
 
     QSqlQuery query(db);
     QString queryString;
