@@ -14,6 +14,7 @@
 #include <boost/optional.hpp>
 
 #include <QCoreApplication>
+#include <QDate>
 #include <QSqlDatabase>
 #include <QSqlRecord>
 #include <QString>
@@ -34,6 +35,11 @@ namespace ncountr { namespace datastores { namespace sqlite {
  * This class implements the `api::account` interface, and encapsulates the
  * `account` table in the Sqlite database. Objects of this class encapsulate
  * individual Accounts, and records in the `account` table.
+ * 
+ * \todo Expand documentation
+ * 
+ * \todo Notes on record structure, including non-normalised running balance
+ * info
  */
 class account : public api::account
 {
@@ -95,29 +101,29 @@ class account : public api::account
         QSqlDatabase& db
         , int id);
 
-    /**
-     * \brief Create a new Income or Expense Account object (along with the
-     * underlying Record)
-     */
-    static account_spr make_new(
-        QSqlDatabase& db
-        , QString name
-        , type_t t
-        , account_spr parent
-        , boost::optional<QString> description);
-
-    /**
-     * \brief Create a new Asset or Liability Account object (along with the
-     * underlying Record)
-     */
-    static account_spr make_new(
-        QSqlDatabase& db
-        , QString name
-        , type_t t
-        , account_spr parent
-        , boost::optional<QString> description
-        , ncountr::api::date od
-        , ncountr::api::currency_t ob);
+///    /**
+///     * \brief Create a new Income or Expense Account object (along with the
+///     * underlying Record)
+///     */
+///    static account_spr make_new(
+///        QSqlDatabase& db
+///        , QString name
+///        , type_t t
+///        , account_spr parent
+///        , boost::optional<QString> description);
+///
+///    /**
+///     * \brief Create a new Asset or Liability Account object (along with the
+///     * underlying Record)
+///     */
+///    static account_spr make_new(
+///        QSqlDatabase& db
+///        , QString name
+///        , type_t t
+///        , account_spr parent
+///        , boost::optional<QString> description
+///        , ncountr::api::date od
+///        , ncountr::api::currency_t ob);
 
     /**
      * \brief Find an existing Account object, given its Full Path
@@ -233,90 +239,158 @@ class account : public api::account
             QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
+///    /**
+///     * \brief Retrieve the account type enumerator (asset, liability, income
+///     * or expense)
+///     */
+///    virtual type_t account_type(void) const override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));
+///    }    
+///
+///    /**
+///     * \brief Set the account type (for income and expense accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_account_type(type_t t) override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));
+///    }
+///
+///    /**
+///     * \brief Set the account type (for asset and liability accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_account_type(
+///            type_t t
+///            , ncountr::api::date opening_date
+///            , ncountr::api::currency_t opening_balance) override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+///    }
+///
+///    /**
+///     * \brief Retrieve the opening date (for asset and liability accounts)
+///     */
+///    virtual ncountr::api::date opening_date(void) const override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+///    }
+///
+///    /**
+///     * \brief Set the opening date (for asset and liability accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_opening_date(ncountr::api::date od) override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+///    }
+///
+///    /**
+///     * \brief Retrieve the opening balance (for asset and liability accounts)
+///     */
+///    virtual ncountr::api::currency_t opening_balance(void) const override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+///    }
+///
+///    /**
+///     * \brief Set the opening balance (for asset and liability accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_opening_balance(ncountr::api::currency_t ob) override
+///    {
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+///    }
+
     /**
-     * \brief Retrieve the account type enumerator (asset, liability, income
-     * or expense)
+     * \brief Whether or not the Account has a Running Balance
+     * 
+     * Accounts with a running balance are Assets or Liabilities, and have a
+     * positive or negative values at any point in time that contributes to
+     * the Total Net Worth. They have an Opening Date and an Opening Balance.
+     * 
+     * Accounts without a running balance are Income or Expenses. They depict
+     * funds going in or out over a set period of time.
+     * 
+     * \return `true` if the Account has a Running Balance
+     * 
+     * \todo Document business rules
      */
-    virtual type_t account_type(void) const override
+    virtual bool has_running_balance(void) const override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }    
+    }
 
     /**
-     * \brief Set the account type (for income and expense accounts)
+     * \brief Set up the Account to have a Running Balance, with an Opening
+     * Date and Opening Balance
      * 
-     * \todo Expand documentation about enforcing business rules
+     * \param od The Opening Date of the Account
+     * 
+     * \param ob The Opening Balance of the Account
+     * 
+     * \todo Document business rules
      */
-    virtual void set_account_type(type_t t) override
+    virtual void set_running_balance_true(
+            ncountr::api::date od
+            , ncountr::api::currency_t ob) override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
-     * \brief Set the account type (for asset and liability accounts)
+     * \brief Set the Account to have no Running Balance (i.e. to be an
+     * Income or Expense Account)
      * 
-     * \todo Expand documentation about enforcing business rules
+     * \todo Document business rules
      */
-    virtual void set_account_type(
-            type_t t
-            , ncountr::api::date opening_date
-            , ncountr::api::currency_t opening_balance) override
+    virtual void set_running_balance_false(void) override
     {
         throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
-     * \brief Retrieve the opening date (for asset and liability accounts)
-     */
-    virtual ncountr::api::date opening_date(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
-
-    /**
-     * \brief Set the opening date (for asset and liability accounts)
+     * \brief Retrieve the Opening Data (Opening Date and Opening Balance)
+     * for an Account; this method should only be called for Running Balance
+     * Accounts
      * 
-     * \todo Expand documentation about enforcing business rules
-     */
-    virtual void set_opening_date(ncountr::api::date od) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
-
-    /**
-     * \brief Retrieve the opening balance (for asset and liability accounts)
-     */
-    virtual ncountr::api::currency_t opening_balance(void) const override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-    }
-
-    /**
-     * \brief Set the opening balance (for asset and liability accounts)
+     * \return A tuple with the Opening Date and Opening Balance
      * 
-     * \todo Expand documentation about enforcing business rules
+     * \throw account::error The Account does not have a Running Balance
+     * 
+     * \todo Document business rules
      */
-    virtual void set_opening_balance(ncountr::api::currency_t ob) override
+    virtual std::tuple<ncountr::api::date, ncountr::api::currency_t>
+    opening_data(void) const override
     {
         throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));        
+            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
-    /**
-     * \brief Convert an Account Type enumerator to a human-readable QString
-     */
-    static QString to_qstring(type_t t);
-
-    /**
-     * \brief Convert a human-readable QString to an Account Type enumerator
-     */
-    static type_t to_account_type(QString str);
+///    /**
+///     * \brief Convert an Account Type enumerator to a human-readable QString
+///     */
+///    static QString to_qstring(type_t t);
+///
+///    /**
+///     * \brief Convert a human-readable QString to an Account Type enumerator
+///     */
+///    static type_t to_account_type(QString str);
 
     // -- Lower-level Database Services --
 
@@ -338,27 +412,43 @@ class account : public api::account
      */
     static int max_id(QSqlDatabase& db);
 
-    /**
-     * \brief Create an Income or Expense Account record
-     */
-    static void create_record(
-        QSqlDatabase& db
-        , int id
-        , QString full_path
-        , boost::optional<QString> description
-        , type_t t);
+    ////**
+    /// * \brief Create an Income or Expense Account record
+    /// */
+    ///static void create_record(
+    ///    QSqlDatabase& db
+    ///    , int id
+    ///    , QString full_path
+    ///    , boost::optional<QString> description
+    ///    , type_t t);
 
-    /**
-     * \brief Create an Asset or Liability Account record
-     */
     static void create_record(
         QSqlDatabase& db
         , int id
-        , QString full_path
-        , boost::optional<QString> description
-        , type_t t
-        , ncountr::api::date od
-        , ncountr::api::currency_t ob);
+        , QString name
+        , boost::optional<int> parent_id
+        , QString description
+        , QDate opening_date
+        , double opening_balance);
+
+    static void create_record(
+        QSqlDatabase& db
+        , int id
+        , QString name
+        , boost::optional<int> parent_id
+        , QString description);
+
+    ////**
+    /// * \brief Create an Asset or Liability Account record
+    /// */
+    ///static void create_record(
+    ///    QSqlDatabase& db
+    ///    , int id
+    ///    , QString full_path
+    ///    , boost::optional<QString> description
+    ///    , type_t t
+    ///    , ncountr::api::date od
+    ///    , ncountr::api::currency_t ob);
 
     /**
      * \brief Find an Account record by its ID

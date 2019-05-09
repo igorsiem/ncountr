@@ -35,13 +35,7 @@ namespace ncountr { namespace api {
  * 
  * \todo Document account names / paths / identifiers
  * 
- * \todo Document account types, along with the rule that asset / liability
- * accounts should not have income / expense accounts as children, and
- * vice-versa; not enforced at the API level; also explain that Asset /
- * Liability accounts *must* have an opening date and balance, while Income
- * and Expense Accounts *must not* have these items. These business rules
- * are enforced in the runtime implementation, rather than an hierarchical
- * Account class structure.
+ * \todo Document account types and business rules
  */
 class account
 {
@@ -69,26 +63,6 @@ class account
         DECLARE_DEFAULT_MOVE_AND_COPY_SEMANTICS(error)
 
     };  // end error class
-
-    /**
-     * \brief Enumerate different types of account
-     */
-    enum class type_t
-    {
-        asset           ///< Assets, e.g. bank account, cash
-        , liability     ///< Liabilities, e.g. loans, credit cards
-        , income        ///< Income, e.g. Salary
-        , expense       ///< Expenses, e.g. Rent
-    };  // end type_t enumeration
-
-///    /**
-///     * \brief Opening Data and Balance for an Account
-///     * 
-///     * Assets and Liabilities have specific opening dates and balances. They
-///     * must be supplied for these Account Types, and may not be supplied for
-///     * Income and Expense Accounts.
-///     */
-///    using opening_info_t = std::tuple<date, currency_t>;
 
     DECLARE_DEFAULT_VIRTUAL_LIFE_CYCLE(account)
 
@@ -161,30 +135,10 @@ class account
      */
     virtual std::wstring parent_path(void) const = 0;
 
-///    /**
-///     *  \brief Set the full path of the parent Account
-///     * 
-///     * If this is an empty string, the Account is at the root.
-///     * 
-///     * Parent paths are always assumed to begin at the root, and need not
-///     * start with the `account_path_separator`.
-///     */
-///    virtual void set_parent_path(std::wstring& p) = 0;
-
     /**
      * \brief Set the parent account for this account
      * 
-     * When setting the parent, the implementation must:
-     * 
-     * * Allow the parent to be `nullptr` - this means that the account will
-     *   have no parent, and be at the root of the Accounts Tree
-     * 
-     * * Ensure that balance (asset and liability) accounts only have balance
-     *   accounts as parents, and with the same condition for non-balance
-     *   (income and expense) accounts.
-     * 
-     * * Ensure that the Account's Name is unique in the set of sibling
-     *   Accounts
+     * \todo Document business rules
      */
     virtual void set_parent(account_spr parent) = 0;
 
@@ -216,52 +170,101 @@ class account
      */
     virtual void set_description(std::wstring d) = 0;
 
-    /**
-     * \brief Retrieve the account type enumerator (asset, liability, income
-     * or expense)
-     */
-    virtual type_t account_type(void) const = 0;
+///    /**
+///     * \brief Retrieve the account type enumerator (asset, liability, income
+///     * or expense)
+///     */
+///    virtual type_t account_type(void) const = 0;
+///
+///    /**
+///     * \brief Set the account type (for income and expense accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_account_type(type_t t) = 0;
+///
+///    /**
+///     * \brief Set the account type (for asset and liability accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_account_type(
+///        type_t t
+///        , date opening_date
+///        , currency_t opening_balance) = 0;
+///
+///    /**
+///     * \brief Retrieve the opening date (for asset and liability accounts)
+///     */
+///    virtual date opening_date(void) const = 0;
+///
+///    /**
+///     * \brief Set the opening date (for asset and liability accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_opening_date(date od) = 0;
+///
+///    /**
+///     * \brief Retrieve the opening balance (for asset and liability accounts)
+///     */
+///    virtual currency_t opening_balance(void) const = 0;
+///
+///    /**
+///     * \brief Set the opening balance (for asset and liability accounts)
+///     * 
+///     * \todo Expand documentation about enforcing business rules
+///     */
+///    virtual void set_opening_balance(currency_t ob) = 0;
 
     /**
-     * \brief Set the account type (for income and expense accounts)
+     * \brief Whether or not the Account has a Running Balance
      * 
-     * \todo Expand documentation about enforcing business rules
-     */
-    virtual void set_account_type(type_t t) = 0;
-
-    /**
-     * \brief Set the account type (for asset and liability accounts)
+     * Accounts with a running balance are Assets or Liabilities, and have a
+     * positive or negative values at any point in time that contributes to
+     * the Total Net Worth. They have an Opening Date and an Opening Balance.
      * 
-     * \todo Expand documentation about enforcing business rules
-     */
-    virtual void set_account_type(
-        type_t t
-        , date opening_date
-        , currency_t opening_balance) = 0;
-
-    /**
-     * \brief Retrieve the opening date (for asset and liability accounts)
-     */
-    virtual date opening_date(void) const = 0;
-
-    /**
-     * \brief Set the opening date (for asset and liability accounts)
+     * Accounts without a running balance are Income or Expenses. They depict
+     * funds going in or out over a set period of time.
      * 
-     * \todo Expand documentation about enforcing business rules
-     */
-    virtual void set_opening_date(date od) = 0;
-
-    /**
-     * \brief Retrieve the opening balance (for asset and liability accounts)
-     */
-    virtual currency_t opening_balance(void) const = 0;
-
-    /**
-     * \brief Set the opening balance (for asset and liability accounts)
+     * \return `true` if the Account has a Running Balance
      * 
-     * \todo Expand documentation about enforcing business rules
+     * \todo Document business rules
      */
-    virtual void set_opening_balance(currency_t ob) = 0;
+    virtual bool has_running_balance(void) const = 0;
+
+    /**
+     * \brief Set up the Account to have a Running Balance, with an Opening
+     * Date and Opening Balance
+     * 
+     * \param od The Opening Date of the Account
+     * 
+     * \param ob The Opening Balance of the Account
+     * 
+     * \todo Document business rules
+     */
+    virtual void set_running_balance_true(date od, currency_t ob) = 0;
+
+    /**
+     * \brief Set the Account to have no Running Balance (i.e. to be an
+     * Income or Expense Account)
+     * 
+     * \todo Document business rules
+     */
+    virtual void set_running_balance_false(void) = 0;
+
+    /**
+     * \brief Retrieve the Opening Data (Opening Date and Opening Balance)
+     * for an Account; this method should only be called for Running Balance
+     * Accounts
+     * 
+     * \return A tuple with the Opening Date and Opening Balance
+     * 
+     * \throw account::error The Account does not have a Running Balance
+     * 
+     * \todo Document business rules
+     */
+    virtual std::tuple<date, currency_t> opening_data(void) const = 0;
 
 };  // end account class
 
