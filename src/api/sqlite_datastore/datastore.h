@@ -151,6 +151,34 @@ class datastore : public api::datastore
      */
     virtual void set_description(std::wstring d);
 
+    // -- Account-management --
+
+    virtual api::account_spr create_account(
+        std::wstring full_path
+        , api::account_spr parent
+        , std::wstring description
+        , api::date opening_date
+        , api::currency_t opening_balance) override
+    {
+        throw error(
+            QString(__FUNCTION__) + tr(" function not implemented yet"));
+    }
+
+    virtual api::account_spr create_account(
+        std::wstring full_path
+        , api::account_spr parent
+        , std::wstring description) override
+    {
+        throw error(
+            QString(__FUNCTION__) + tr(" function not implemented yet"));
+    }
+
+    virtual api::account_spr find_account(std::wstring full_path) override
+    {
+        throw error(
+            QString(__FUNCTION__) + tr(" function not implemented yet"));
+    }
+
     /**
      * \brief Retrieve the version number for the underlying file format
      * 

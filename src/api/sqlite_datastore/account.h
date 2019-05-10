@@ -125,10 +125,10 @@ class account : public api::account
 ///        , ncountr::api::date od
 ///        , ncountr::api::currency_t ob);
 
-    /**
-     * \brief Find an existing Account object, given its Full Path
-     */
-    static account_spr find_existing(QString path);
+///    /**
+///     * \brief Find an existing Account object, given its Full Path
+///     */
+///    static account_spr find_existing(QString path);
 
     /**
      * \brief Trivial destructor
@@ -170,6 +170,23 @@ class account : public api::account
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
+
+    /**
+     * \brief Split an account path string into an array of account names
+     * 
+     * This is a version of the base-class method that uses `QString` instead
+     * of `std::wstring`.
+     */
+    static std::vector<QString> split_path(const QString& p);
+
+    /**
+     * \brief Concatenate a vector of account names into an account path
+     * string
+     * 
+     * This is a version of the base-class method that uses `QString` instead
+     * of `std::wstring`.
+     */
+    static QString concatenate_path(const std::vector<QString>& p);
 
     /**
      * \brief Retrieve the full path of the Account that is the parent of
@@ -412,16 +429,6 @@ class account : public api::account
      */
     static int max_id(QSqlDatabase& db);
 
-    ////**
-    /// * \brief Create an Income or Expense Account record
-    /// */
-    ///static void create_record(
-    ///    QSqlDatabase& db
-    ///    , int id
-    ///    , QString full_path
-    ///    , boost::optional<QString> description
-    ///    , type_t t);
-
     /**
      * \brief Create a Running Balance Account record
      * 
@@ -512,18 +519,6 @@ class account : public api::account
         , QString name
         , boost::optional<int> parent_id
         , QString description);
-
-    ////**
-    /// * \brief Create an Asset or Liability Account record
-    /// */
-    ///static void create_record(
-    ///    QSqlDatabase& db
-    ///    , int id
-    ///    , QString full_path
-    ///    , boost::optional<QString> description
-    ///    , type_t t
-    ///    , ncountr::api::date od
-    ///    , ncountr::api::currency_t ob);
 
     /**
      * \brief Find an Account record by its ID

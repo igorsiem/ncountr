@@ -62,106 +62,46 @@ TEST_CASE("sqlite account table", "[unit]")
             SECTION("first record (assets)")
             {
 
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "name"
-                        , "id = 1")
-                    == "assets");
+                auto rec = sql_ds::account::find_by_id(ds->db(), 1);
+                if (rec == boost::none)
+                    FAIL("expected to retrieve record with ID 1, but no "
+                        "record was returned");
+
+                REQUIRE(rec->value("name").toString() == "assets");
 
                 // Parent ID is Null (account is at the root)
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "parent_id"
-                        , "id = 1").isNull());
+                REQUIRE(rec->value("parent_id").isNull());
 
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "description"
-                        , "id = 1")
+                REQUIRE(rec->value("description").toString()
                     == "all assets");
 
                 // This is a running balance account
+                REQUIRE(rec->value("has_running_balance").toBool() == true);
                 REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<bool>(
-                        ds->db()
-                        , "account"
-                        , "has_running_balance"
-                        , "id = 1")
-                    == true);
-
-                // Opening date is converted from Julian Day
-                REQUIRE(
-                    QDate::fromJulianDay(
-                        sql_ds::retrieveSingleRecordFieldValue<int>(
-                        ds->db()
-                        , "account"
-                        , "opening_date"
-                        , "id = 1")) == QDate(2010, 1, 1));
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<double>(
-                        ds->db()
-                        , "account"
-                        , "opening_balance"
-                        , "id = 1") == 0.0);
+                    QDate::fromJulianDay(rec->value("opening_date").toInt())
+                    == QDate(2010, 1, 1));
+                REQUIRE(rec->value("opening_balance").toDouble() == 0.0);
 
             }   // end first record section
 
             SECTION("second record (saving)")
             {
 
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "name"
-                        , "id = 2")
-                    == "savings");
+                auto rec = sql_ds::account::find_by_id(ds->db(), 2);
+                if (rec == boost::none)
+                    FAIL("expected to retrieve record with ID 2, but no "
+                        "record was returned");
 
-                // Parent ID is 1
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "parent_id"
-                        , "id = 2").toInt() == 1);
-
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "description"
-                        , "id = 2")
+                REQUIRE(rec->value("name").toString() == "savings");
+                REQUIRE(rec->value("parent_id").toInt() == 1);
+                REQUIRE(rec->value("description").toString()
                     == "savings account");
 
                 // We DO have a running balance and opening data
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<bool>(
-                        ds->db()
-                        , "account"
-                        , "has_running_balance"
-                        , "id = 2")
-                    == true);
-
-                REQUIRE(
-                    QDate::fromJulianDay(
-                        sql_ds::retrieveSingleRecordFieldValue<int>(
-                            ds->db()
-                            , "account"
-                            , "opening_date"
-                            , "id = 2")) == QDate(2010, 1, 1));
-
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<double>(
-                        ds->db()
-                        , "account"
-                        , "opening_balance"
-                        , "id = 2") == 100.0);
+                REQUIRE(rec->value("has_running_balance").toBool() == true);
+                REQUIRE(rec->value("opening_date").toInt()
+                    == QDate(2010, 1, 1).toJulianDay());
+                REQUIRE(rec->value("opening_balance").toDouble() == 100.0);
 
             }   // end record 2 section
 
@@ -251,102 +191,46 @@ TEST_CASE("sqlite account table", "[unit]")
 
             SECTION("first record - expenses")
             {
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "name"
-                        , "id = 1")
-                    == "expenses");
+                // Retrieve the existing record, and check its values
+                auto rec = sql_ds::account::find_by_id(ds->db(), 1);
+                if (rec == boost::none)
+                    FAIL("expected to retrieve record with ID 1, but no "
+                        "record was returned");
 
-                // Parent ID is Null (account is at the root)
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "parent_id"
-                        , "id = 1").isNull());
+                REQUIRE(rec->value("name").toString() == "expenses");
 
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "description"
-                        , "id = 1")
+               // Parent ID is Null (account is at the root)
+                REQUIRE(rec->value("parent_id").isNull());
+
+                REQUIRE(rec->value("description").toString()
                     == "all expenses");
 
                 // No running balance data
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<bool>(
-                        ds->db()
-                        , "account"
-                        , "has_running_balance"
-                        , "id = 1")
-                    == false);
-
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "opening_date"
-                        , "id = 1").isNull());
-
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "opening_balance"
-                        , "id = 1").isNull());
+                REQUIRE(rec->value("has_running_balance").toBool() == false);
+                REQUIRE(rec->value("opening_date").isNull());
+                REQUIRE(rec->value("opening_balance").isNull());
             }   // end first record section
 
             SECTION("second record - rent")
             {
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "name"
-                        , "id = 2")
-                    == "rent");
+                // Retrieve the existing record, and check its values
+                auto rec = sql_ds::account::find_by_id(ds->db(), 2);
+                if (rec == boost::none)
+                    FAIL("expected to retrieve record with ID 1, but no "
+                        "record was returned");
 
+                REQUIRE(rec->value("name").toString() == "rent");
+                
                 // Parent ID is 1
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "parent_id"
-                        , "id = 2").toInt() == 1);
+                REQUIRE(rec->value("parent_id").toInt() == 1);
 
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QString>(
-                        ds->db()
-                        , "account"
-                        , "description"
-                        , "id = 2")
+                REQUIRE(rec->value("description").toString()
                     == "accommodation rental");
 
                 // No running balance data
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<bool>(
-                        ds->db()
-                        , "account"
-                        , "has_running_balance"
-                        , "id = 2")
-                    == false);
-
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "opening_date"
-                        , "id = 2").isNull());
-
-                REQUIRE(
-                    sql_ds::retrieveSingleRecordFieldValue<QVariant>(
-                        ds->db()
-                        , "account"
-                        , "opening_balance"
-                        , "id = 2").isNull());
+                REQUIRE(rec->value("has_running_balance").toBool() == false);
+                REQUIRE(rec->value("opening_date").isNull());
+                REQUIRE(rec->value("opening_balance").isNull());
 
             }   // end record 2 section
 

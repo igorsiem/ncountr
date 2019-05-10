@@ -82,6 +82,22 @@ class datastore
      */
     virtual void set_description(std::wstring d) = 0;
 
+    // -- Account-management --
+
+    virtual account_spr create_account(
+        std::wstring full_path
+        , account_spr parent
+        , std::wstring description
+        , date opening_date
+        , currency_t opening_balance) = 0;
+
+    virtual account_spr create_account(
+        std::wstring full_path
+        , account_spr parent
+        , std::wstring description) = 0;
+
+    virtual account_spr find_account(std::wstring full_path) = 0;
+
 };  // end datastore class
 
 /**

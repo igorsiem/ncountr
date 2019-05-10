@@ -51,10 +51,10 @@ account::account(
 ///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 ///}
 
-account_spr account::find_existing(QString path)
-{
-    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
-}
+///account_spr account::find_existing(QString path)
+///{
+///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
+///}
 
 account::~account(void)
 {
@@ -86,6 +86,23 @@ void account::initialise(QSqlDatabase& db)
     prepareAndExecute(query, queryString);
 
 }   // end initialise method
+
+std::vector<QString> account::split_path(const QString& p)
+{
+    std::vector<QString> result;
+    auto std_result = base_t::split_path(p.toStdWString());
+    for (auto s : std_result) result.push_back(QString::fromStdWString(s));
+
+    return result;
+}   // end  method
+
+QString account::concatenate_path(const std::vector<QString>& p)
+{
+    std::vector<std::wstring> std_p;
+    for (auto n : p) std_p.push_back(n.toStdWString());
+
+    return QString::fromStdWString(base_t::concatenate_path(std_p));
+}   // end  method
 
 ///QString account::to_qstring(type_t t)
 ///{
@@ -362,20 +379,20 @@ boost::optional<QSqlRecord> account::find_by_id(
         , int id)
 {
 
-    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
+///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-///    if (!db.isOpen())
-///        throw error(tr("attempt to find an Account record in a Database "
-///            "that is not open"));
-///
-///    QString queryString = "SELECT * FROM account WHERE id = :id";
-///
-///    QSqlQuery query(db);
-///    prepareAndExecute(query, queryString, {{":id", id}});
-///
-///    if (query.next()) return query.record();
-///    else return boost::none;
-///
+    if (!db.isOpen())
+        throw error(tr("attempt to find an Account record in a Database "
+            "that is not open"));
+
+    QString queryString = "SELECT * FROM account WHERE id = :id";
+
+    QSqlQuery query(db);
+    prepareAndExecute(query, queryString, {{":id", id}});
+
+    if (query.next()) return query.record();
+    else return boost::none;
+
 }   // end find_by_id method
 
 boost::optional<QSqlRecord> account::find_by_full_path(
