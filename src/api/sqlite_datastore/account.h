@@ -23,6 +23,7 @@
 using namespace fmt::literals;
 
 #include "../api.h"
+#include "db_utils.h"
 
 #ifndef _sqlite_account_h_included
 #define _sqlite_account_h_included
@@ -101,35 +102,6 @@ class account : public api::account
         QSqlDatabase& db
         , int id);
 
-///    /**
-///     * \brief Create a new Income or Expense Account object (along with the
-///     * underlying Record)
-///     */
-///    static account_spr make_new(
-///        QSqlDatabase& db
-///        , QString name
-///        , type_t t
-///        , account_spr parent
-///        , boost::optional<QString> description);
-///
-///    /**
-///     * \brief Create a new Asset or Liability Account object (along with the
-///     * underlying Record)
-///     */
-///    static account_spr make_new(
-///        QSqlDatabase& db
-///        , QString name
-///        , type_t t
-///        , account_spr parent
-///        , boost::optional<QString> description
-///        , ncountr::api::date od
-///        , ncountr::api::currency_t ob);
-
-///    /**
-///     * \brief Find an existing Account object, given its Full Path
-///     */
-///    static account_spr find_existing(QString path);
-
     /**
      * \brief Trivial destructor
      */
@@ -144,6 +116,11 @@ class account : public api::account
     static void initialise(QSqlDatabase& db);
 
     // -- Fields --
+    
+    /**
+     * \brief Retrieve the ID of the underlying Account record
+     */
+    int id(void) const { return m_id; }
 
     /**
      * \brief Retrieve the Name of the Account
@@ -153,8 +130,7 @@ class account : public api::account
      */
     virtual std::wstring name(void) const override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
+        return retrieveFieldValue<QString>("name").toStdWString();
     }
 
     /**
@@ -199,14 +175,28 @@ class account : public api::account
      */
     virtual std::wstring parent_path(void) const override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+
+        std::vector<std::wstring> path_names;
+        auto parent_id = retrieveFieldValue<QVariant>("parent_id");
+        while (parent_id.isNull() == false)
+        {
+            auto parent_rec = find_by_id(m_db, parent_id.toInt());
+            if (parent_rec == boost::none) parent_id = QVariant();
+            else
+            {
+                path_names.push_back(
+                    parent_rec->value("name").toString().toStdWString());
+                parent_id = parent_rec->value("parent_id");
+            }
+        }
+
+        return api::account::concatenate_path(path_names);
+    }   // end parent_path method
 
     /**
      * \brief Set the Parent Account of the Account
      */
-    virtual void set_parent(account_spr parent)
+    virtual void set_parent(api::account_spr parent) override
     {
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));
@@ -219,10 +209,15 @@ class account : public api::account
      * a Datastore. Note that if the Account is at the root (i.e. the Parent
      * Path is empty), then the Full Path is the same as the Account Name.
      */
-    virtual std::wstring full_path(void) override
+    virtual std::wstring full_path(void) const override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
+
+        auto pp = parent_path();
+        if (pp.empty()) return name();
+        else return pp + account_path_separator + name();
+
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
@@ -243,8 +238,11 @@ class account : public api::account
      */
     virtual std::wstring description(void) const override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
+
+        return retrieveFieldValue<QString>("description").toStdWString();
+
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
@@ -347,8 +345,9 @@ class account : public api::account
      */
     virtual bool has_running_balance(void) const override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
+        return retrieveFieldValue<bool>("has_running_balance");
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
@@ -395,9 +394,21 @@ class account : public api::account
     virtual std::tuple<ncountr::api::date, ncountr::api::currency_t>
     opening_data(void) const override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+        if (has_running_balance() == false)
+            throw error(tr("attempt to retrieve opening data for an account "
+                "that has no running balance - ") +
+                    QString::fromStdWString(full_path()));
+
+
+        return std::make_tuple(
+            to_api_date(
+                QDate::fromJulianDay(
+                    retrieveFieldValue<int>("opening_date")))
+            , retrieveFieldValue<double>("opening_balance"));
+
+///        throw error(
+///            QString(__FUNCTION__) + tr(" function not implemented yet"));
+    }   // end opening_data
 
 ///    /**
 ///     * \brief Convert an Account Type enumerator to a human-readable QString
@@ -535,6 +546,25 @@ class account : public api::account
         , QString full_path);
 
     /**
+     * \brief Retrieve an Account record given its parent ID (which may be
+     * `boost::none`) and its Name
+     */
+    static boost::optional<QSqlRecord> find_by_parent_id_and_name(
+        QSqlDatabase& db
+        ,   boost::optional<int> parent_id
+        , QString name);
+
+    template <typename T>
+    T retrieveFieldValue(QString fieldName) const
+    {
+        return retrieveSingleRecordFieldValue<T>(
+            m_db
+            , "account"
+            , fieldName
+            , QString::fromStdString("id = {}"_format(m_id)));
+    }   // end retrieveFieldValue method
+
+    /**
      * \brief Destroy an Account record by its ID
      */
     static void destroy_record_by_id(QSqlDatabase& db, int id);
@@ -555,11 +585,8 @@ class account : public api::account
 
     /**
      * \brief The Identifier for the Account Record
-     * 
-     * Note that this may be absent (`boost::none`) for a new Account Record
-     * that has not yet been saved
      */
-    boost::optional<int> m_id;
+    int m_id;
 
     Q_DECLARE_TR_FUNCTIONS(account)
 

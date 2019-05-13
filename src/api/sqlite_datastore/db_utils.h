@@ -10,6 +10,7 @@
  */
 
 #include <QCoreApplication>
+#include <QDate>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -171,6 +172,18 @@ void updateSingleRecordFieldValue(
     prepareAndExecute(query, queryString, {{":v", value}});
 
 }   // end updateSingleRecordFieldValue template function
+
+/**
+ * \brief Convenuence function for converting an API date object (from Boost)
+ * to a QDate
+ */
+QDate to_qdate(ncountr::api::date d);
+
+/**
+ * \brief Convenience function for converting a QDate to an API date (from
+ * Boost)
+ */
+ncountr::api::date to_api_date(QDate d);
 
 }}} // end ncountr::datastores::sqlite namespace
 

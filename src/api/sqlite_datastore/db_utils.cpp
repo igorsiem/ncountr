@@ -35,4 +35,14 @@ void prepareAndExecute(
 
 }   // end prepareAndExecute
 
+QDate to_qdate(ncountr::api::date d)
+{
+    return QDate(d.year(), d.month().as_number(), d.day());
+}   // end to_qdate
+
+ncountr::api::date to_api_date(QDate d)
+{
+    return ncountr::api::date(d.year(), d.month(), d.day());
+}   // end to_api_date
+
 }}} // end ncountr::datastores::sqlite namespace

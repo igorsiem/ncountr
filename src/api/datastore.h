@@ -85,14 +85,14 @@ class datastore
     // -- Account-management --
 
     virtual account_spr create_account(
-        std::wstring full_path
+        std::wstring name
         , account_spr parent
         , std::wstring description
         , date opening_date
         , currency_t opening_balance) = 0;
 
     virtual account_spr create_account(
-        std::wstring full_path
+        std::wstring name
         , account_spr parent
         , std::wstring description) = 0;
 

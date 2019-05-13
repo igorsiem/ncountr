@@ -91,6 +91,76 @@ void datastore::set_description(std::wstring d)
         , "id = 1");
 }   // end set_description method
 
+api::account_spr datastore::create_account(
+        std::wstring name
+        , api::account_spr parent
+        , std::wstring description
+        , api::date opening_date
+        , api::currency_t opening_balance)
+{
+
+    if (name.empty())
+        throw error(tr("attempt to create Account with empty Name"));
+
+    auto id = account::max_id(*m_db) + 1;
+
+    boost::optional<int> parent_id = boost::none;
+    if (parent)
+        parent_id = std::dynamic_pointer_cast<sqlite::account>(parent)->id();
+
+    account::create_record(
+        *m_db
+        , id
+        , QString::fromStdWString(name)
+        , parent_id
+        , QString::fromStdWString(description)
+        , to_qdate(opening_date)
+        , opening_balance);
+    
+    return std::make_shared<sqlite::account>(*m_db, id);
+    
+}   // end create_account method
+
+api::account_spr datastore::create_account(
+        std::wstring name
+        , api::account_spr parent
+        , std::wstring description)
+{
+    if (name.empty())
+        throw error(tr("attempt to create Account with empty Name"));
+
+    auto id = account::max_id(*m_db) + 1;
+
+    boost::optional<int> parent_id = boost::none;
+    if (parent)
+        parent_id = std::dynamic_pointer_cast<sqlite::account>(parent)->id();
+
+    account::create_record(
+        *m_db
+        , id
+        , QString::fromStdWString(name)
+        , parent_id
+        , QString::fromStdWString(description));
+    
+    return std::make_shared<sqlite::account>(*m_db, id);
+
+}   // end create_account method
+
+api::account_spr datastore::find_account(std::wstring full_path)
+{
+    // Find the account record, then wrap it in an account object
+    auto rec =
+        account::find_by_full_path(
+            *m_db
+            , QString::fromStdWString(full_path));
+
+    if (rec == boost::none) return nullptr;
+    else
+        return std::make_shared<sqlite::account>(
+            *m_db
+            , rec->value("id").toInt());
+}   // end find_account method
+
 int datastore::file_format_version(void) const
 {
     return retrieveSingleRecordFieldValue<int>(
@@ -136,15 +206,5 @@ void datastore::initialise(QSqlDatabase& db)
     // Now lay out the other tables - handled by other classes
     account::initialise(db);
 }   // end initialise method
-
-QDate to_qdate(ncountr::api::date d)
-{
-    return QDate(d.year(), d.month().as_number(), d.day());
-}   // end to_qdate
-
-ncountr::api::date to_api_date(QDate d)
-{
-    return ncountr::api::date(d.year(), d.month(), d.day());
-}   // end to_api_date
 
 }}}  // end ncountr::datastores::sqlite namespace

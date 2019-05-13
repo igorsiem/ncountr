@@ -29,33 +29,6 @@ account::account(
 
 }   // end constructor
 
-///account_spr account::make_new(
-///        QSqlDatabase& db
-///        , QString name
-///        , type_t t
-///        , account_spr parent
-///        , boost::optional<QString> description)
-///{
-///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
-///}   // end make_shared
-///
-///account_spr account::make_new(
-///        QSqlDatabase& db
-///        , QString name
-///        , type_t t
-///        , account_spr parent
-///        , boost::optional<QString> description
-///        , ncountr::api::date od
-///        , ncountr::api::currency_t ob)
-///{
-///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
-///}
-
-///account_spr account::find_existing(QString path)
-///{
-///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
-///}
-
 account::~account(void)
 {
 }   // end destructor
@@ -379,8 +352,6 @@ boost::optional<QSqlRecord> account::find_by_id(
         , int id)
 {
 
-///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
-
     if (!db.isOpen())
         throw error(tr("attempt to find an Account record in a Database "
             "that is not open"));
@@ -399,22 +370,60 @@ boost::optional<QSqlRecord> account::find_by_full_path(
         QSqlDatabase& db
         , QString full_path)
 {
-    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
+    
+    // Break down the full path and work our way down, finding parent and
+    // child records until we reach the end.
+    auto path_names = split_path(full_path);
 
-///    if (!db.isOpen())
-///        throw error(tr("attempt to find an Account record in a Database "
-///            "that is not open"));
-///
-///    QString queryString =
-///        "SELECT * FROM account WHERE full_path = :full_path";
-///
-///
-///    QSqlQuery query(db);
-///    prepareAndExecute(query, queryString, {{":full_path", full_path}});
-///
-///    if (query.next()) return query.record();
-///    else return boost::none;
+    boost::optional<QSqlRecord> rec = boost::none;
+    for (auto n : path_names)
+    {
+        if (rec == boost::none)
+        {
+            rec = find_by_parent_id_and_name(db, boost::none, n);
+            if (rec == boost::none) return boost::none;
+        }
+        else
+            rec = find_by_parent_id_and_name(
+                db, rec->value("id").toInt(), n);
+    }
+
+    return rec;
+
 }   // end find_by_full_path method
+
+boost::optional<QSqlRecord> account::find_by_parent_id_and_name(
+        QSqlDatabase& db
+        , boost::optional<int> parent_id
+        , QString name)
+{
+    if (!db.isOpen())
+        throw error(tr("attempt to find an Account record in a Database "
+            "that is not open"));
+
+    // Different query if we don't have a parent
+    QString queryString;
+    std::map<QString, QVariant> bindList;
+    if (parent_id == boost::none)
+    {
+        queryString = "SELECT * FROM account "
+            "WHERE name = :name AND parent_id IS NULL";
+        bindList = {{ ":name", name }};
+    }
+    else
+    {
+        queryString = "SELECT * FROM account "
+            "WHERE name = :name AND parent_id = :parent_id";
+        bindList = {{ ":name", name }, {":parent_id", *parent_id }};
+    }
+
+    QSqlQuery query(db);
+    prepareAndExecute(query, queryString, bindList);
+
+    if (query.next()) return query.record();
+    else return boost::none;
+
+}   // end find_by_parent_id_and_name method
 
 void account::destroy_record_by_id(QSqlDatabase& db, int id)
 {

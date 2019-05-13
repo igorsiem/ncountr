@@ -350,6 +350,263 @@ TEST_CASE("sqlite account table", "[unit]")
 
         }   // end exception checks section
 
+        SECTION("finding records")
+        {
+            // Note that finding by record ID is verified in most of the
+            // other sections
+
+            SECTION("find by parent ID and name")
+            {
+                auto rec =
+                    sql_ds::account::find_by_parent_id_and_name(
+                        ds->db(), boost::none, "assets");
+
+                if (rec == boost::none)
+                    FAIL("expected to find record, but none was returned");
+
+                REQUIRE(rec->value("id").toInt() == 1);
+
+                rec = sql_ds::account::find_by_parent_id_and_name(
+                    ds->db(), 3, "rent");
+
+                if (rec == boost::none)
+                    FAIL("expected to find record, but none was returned");
+
+                REQUIRE(rec->value("id").toInt() == 4);
+
+            } // end finding by parent ID and name
+
+            SECTION("find by full path")
+            {
+                auto rec =
+                    sql_ds::account::find_by_full_path(ds->db(), "assets");
+
+                if (rec == boost::none)
+                    FAIL("expected to find record, but none was returned");
+
+                REQUIRE(rec->value("id").toInt() == 1);
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "assets/savings");
+
+                if (rec == boost::none)
+                    FAIL("expected to find record, but none was returned");
+
+                REQUIRE(rec->value("id").toInt() == 2);
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "expenses");
+
+                if (rec == boost::none)
+                    FAIL("expected to find record, but none was returned");
+
+                REQUIRE(rec->value("id").toInt() == 3);
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "expenses/rent");
+
+                if (rec == boost::none)
+                    FAIL("expected to find record, but none was returned");
+
+                REQUIRE(rec->value("id").toInt() == 4);
+
+                // Failure cases - non-existed record paths
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "");
+
+                if (rec != boost::none)
+                    FAIL("retrieved a record when none was expected");
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "abc");
+
+                if (rec != boost::none)
+                    FAIL("retrieved a record when none was expected");
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "abc/123");
+
+                if (rec != boost::none)
+                    FAIL("retrieved a record when none was expected");
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "abc/");
+
+                if (rec != boost::none)
+                    FAIL("retrieved a record when none was expected");
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "/");
+
+                if (rec != boost::none)
+                    FAIL("retrieved a record when none was expected");
+
+                rec =
+                    sql_ds::account::find_by_full_path(
+                        ds->db()
+                        , "/abc");
+
+                if (rec != boost::none)
+                    FAIL("retrieved a record when none was expected");
+
+            }   // end find_by_full_path section
+
+        }   // end find records section
+
     }   // end mixed account types section
     
-}   // end Sqlite Account tests
+}   // end Sqlite Account Table tests
+
+TEST_CASE("sqlite account objects", "[unit]")
+{
+    // Open a new Datastore, and initialise it.
+    //
+    // Can use an in-memory database, so we can re-use it multiple times.
+    QString dbFilePath = ":memory:";
+    //QString dbFilePath =
+    //    "test-output/sqlite_account-test-sqlite_account_objects.db";
+
+    auto ds = std::make_unique<sql_ds::datastore>(dbFilePath);
+    ds->initialise();
+
+    // Account creation - 4 main accounts and 8 subaccounts
+    api::account_spr assets_ac = nullptr;
+    REQUIRE_NOTHROW(
+        assets_ac = ds->create_account(
+                L"assets"
+                , nullptr
+                , L"all assets"
+                , api::date(2010, 1, 1)
+                , 0.0));
+
+    // Set up a child account of the assets account
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"bank"
+            , assets_ac
+            , L"savings account in bank"
+            , api::date(2010, 1, 1)
+            , 1000.0));
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"cash"
+            , assets_ac
+            , L"cash in hand"
+            , api::date(2010, 1, 1)
+            , 50));
+
+    api::account_spr liabilities_ac = nullptr;
+    REQUIRE_NOTHROW(liabilities_ac =
+        ds->create_account(
+            L"liabilities"
+            , nullptr
+            , L"all liabilities"
+            , api::date(2010, 1, 1)
+            , 0));
+
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"credit card"
+            , liabilities_ac
+            , L"credit card"
+            , api::date(2010, 1, 1)
+            , -100));
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"car loan"
+            , liabilities_ac
+            , L"loan for car"
+            , api::date(2010, 1, 1)
+            , -2000));
+
+    api::account_spr income_ac = nullptr;
+    REQUIRE_NOTHROW(
+        income_ac = ds->create_account(L"income", nullptr, L"all income"));
+    REQUIRE_NOTHROW(
+        ds->create_account(L"salary", income_ac, L"regular salary"));
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"contract work"
+            , income_ac
+            , L"income from side contracts"));
+
+    api::account_spr expenses_ac = nullptr;
+    REQUIRE_NOTHROW(
+        ds->create_account(L"expenses", nullptr, L"all expenses"));
+    REQUIRE_NOTHROW(
+        ds->create_account(L"rent", expenses_ac, L"accommodation rental"));
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"groceries"
+            , expenses_ac
+            , L"food and essentials"));
+
+    SECTION("account retrieval")
+    {
+        auto ac = ds->find_account(L"assets");
+        REQUIRE(ac);
+        REQUIRE(ac->name() == L"assets");
+        REQUIRE(ac->parent_path().empty());
+        REQUIRE(ac->full_path() == L"assets");
+        REQUIRE(ac->description() == L"all assets");
+        REQUIRE(ac->has_running_balance());
+        REQUIRE(ac->opening_data()
+            == std::make_tuple(api::date(2010, 1, 1), 0.0));
+
+        ac = ds->find_account(L"assets/bank");
+        REQUIRE(ac);
+        REQUIRE(ac->name() == L"bank");
+        REQUIRE(ac->parent_path() == L"assets");
+        REQUIRE(ac->full_path() == L"assets/bank");
+        REQUIRE(ac->description() == L"savings account in bank");
+        REQUIRE(ac->has_running_balance());
+        REQUIRE(ac->opening_data()
+            == std::make_tuple(api::date(2010, 1, 1), 1000.0));
+    }   // end account retrieval section
+
+    SECTION("exception cases")
+    {
+        // attempting to locate non-existent accounts
+        auto ac = ds->find_account(L"abc");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"abc/xyz");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"assets/abc");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"abc/assets");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"/abc");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"abc/");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"/");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"/assets");
+        REQUIRE(ac == nullptr);
+        ac = ds->find_account(L"assets/");
+        REQUIRE(ac == nullptr);
+    }   // end exception cases section
+
+///    FAIL("tests are incomplete");
+}   // end Sqlite Account Objects test

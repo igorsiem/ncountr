@@ -154,30 +154,18 @@ class datastore : public api::datastore
     // -- Account-management --
 
     virtual api::account_spr create_account(
-        std::wstring full_path
+        std::wstring name
         , api::account_spr parent
         , std::wstring description
         , api::date opening_date
-        , api::currency_t opening_balance) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+        , api::currency_t opening_balance) override;
 
     virtual api::account_spr create_account(
-        std::wstring full_path
+        std::wstring name
         , api::account_spr parent
-        , std::wstring description) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+        , std::wstring description) override;
 
-    virtual api::account_spr find_account(std::wstring full_path) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual api::account_spr find_account(std::wstring full_path) override;
 
     /**
      * \brief Retrieve the version number for the underlying file format
@@ -289,18 +277,6 @@ class datastore : public api::datastore
     Q_DECLARE_TR_FUNCTIONS(datastore)
 
 };  // end datastore class
-
-/**
- * \brief Convenuence function for converting an API date object (from Boost)
- * to a QDate
- */
-QDate to_qdate(ncountr::api::date d);
-
-/**
- * \brief Convenience function for converting a QDate to an API date (from
- * Boost)
- */
-ncountr::api::date to_api_date(QDate d);
 
 }}}  // end ncountr::datastores::sqlite namespace
 

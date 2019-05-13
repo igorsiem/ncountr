@@ -149,7 +149,7 @@ class account
      * a Datastore. Note that if the Account is at the root (i.e. the Parent
      * Path is empty), then the Full Path is the same as the Account Name.
      */
-    virtual std::wstring full_path(void) = 0;
+    virtual std::wstring full_path(void) const = 0;
 
     /**
      * \brief Set the Full Path of the Account
