@@ -111,11 +111,23 @@ class datastore
      */
     virtual account_spr find_account(std::wstring full_path) = 0;
 
+    /**
+     * \brief Retrieve a collection of the children of a given account
+     */
     virtual accounts_by_path_map find_children_of(
         const_account_spr parent) = 0;
 
+    /**
+     * \brief Retrieve a collection of the children of a given account (given
+     * a Full Path)
+     */
     virtual accounts_by_path_map find_children_of(
         std::wstring parent_full_path) = 0;
+
+    /**
+     * \brief Destroy an Account given its Full Path
+     */
+    virtual void destroy_account(std::wstring full_path) = 0;
 
 };  // end datastore class
 

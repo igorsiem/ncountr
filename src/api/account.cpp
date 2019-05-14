@@ -36,10 +36,4 @@ std::wstring account::concatenate_path(const std::vector<std::wstring>& p)
     return boost::algorithm::join(p, account_path_separator);
 }   // end concatenate_path method
 
-///std::wstring account::full_path(void)
-///{
-///    if (parent_path().empty()) return name();
-///    else return (parent_path() + account_path_separator + name());
-///}   // end full_path
-
 }}  //end ncountr::api namespace

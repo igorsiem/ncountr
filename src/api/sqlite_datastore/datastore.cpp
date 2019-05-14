@@ -208,6 +208,12 @@ api::accounts_by_path_map datastore::find_children_of(
     }
 }   // end find_children_of
 
+void datastore::destroy_account(std::wstring full_path)
+{
+    account::destroy_record_by_full_path(
+        *m_db, QString::fromStdWString(full_path));
+}   // end destroy_account method
+
 int datastore::file_format_version(void) const
 {
     return retrieveSingleRecordFieldValue<int>(

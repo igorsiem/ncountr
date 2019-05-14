@@ -658,7 +658,40 @@ TEST_CASE("sqlite account objects", "[unit]")
         REQUIRE_NOTHROW(rent_ac->set_parent(nullptr));
         REQUIRE(rent_ac->full_path() == L"rent");
         REQUIRE(rent_ac->parent_path().empty());
+
+        // Setting running balance - account at root starts with no running
+        // balance, and is then given one, and is then changed back.
+        auto test_ac =
+            ds->create_account(L"test", nullptr, L"running balance test");
+        REQUIRE(test_ac->has_running_balance() == false);
+        REQUIRE_THROWS_AS(test_ac->opening_data(), api::error);
+
+        REQUIRE_NOTHROW(
+            test_ac->set_running_balance_true(api::date(2010, 1, 1), 10.0));
+        REQUIRE(test_ac->has_running_balance() == true);
+        REQUIRE(
+            test_ac->opening_data()
+            == std::make_tuple(api::date(2010, 1, 1), 10.0));
+
+        REQUIRE_NOTHROW(test_ac->set_running_balance_false());
+        REQUIRE(test_ac->has_running_balance() == false);
+        REQUIRE_THROWS_AS(test_ac->opening_data(), api::error);
     }   // end field value updates
+
+    SECTION("account destruction")
+    {
+        // Delete cash - can't retrieve any more.
+        REQUIRE_NOTHROW(ds->destroy_account(L"assets/cash"));
+        REQUIRE(ds->find_account(L"assets/cash") == nullptr);
+
+        // Delete bank and assets accounts - can't retrieve those any more
+        // either
+        REQUIRE_NOTHROW(ds->destroy_account(L"assets/bank"));
+        REQUIRE_NOTHROW(ds->destroy_account(L"assets"));
+
+        REQUIRE(ds->find_account(L"assets") == nullptr);
+        REQUIRE(ds->find_account(L"assets/bank") == nullptr);
+    }
 
     SECTION("exception cases")
     {
@@ -725,7 +758,46 @@ TEST_CASE("sqlite account objects", "[unit]")
             REQUIRE_THROWS_AS(salary_ac->set_parent(nullptr), api::error);
         }   // end setting illegal parents section
 
+        SECTION("illegal running balance settings")
+        {
+            // Can't remove running balance from "assets" because it has
+            // children
+            REQUIRE_THROWS_AS(
+                assets_ac->set_running_balance_false()
+                , api::error);
+
+            // Can't remove running balance from "cash" because it has a
+            // parent
+            auto cash_ac = ds->find_account(L"assets/cash");
+            REQUIRE_THROWS_AS(
+                cash_ac->set_running_balance_false()
+                , api::error);
+
+            // Can't add running balance to "income" because it has children
+            REQUIRE_THROWS_AS(
+                income_ac->set_running_balance_true(
+                    api::date(2010, 1, 1)
+                    , 10.0)
+                , api::error);
+
+            // Can't add running balance to "salary" because it has a parent
+            auto salary_ac = ds->find_account(L"income/salary");
+            REQUIRE_THROWS_AS(
+                salary_ac->set_running_balance_true(
+                    api::date(2010, 1, 1)
+                    , 10.9)
+                , api::error);
+        }
+
+        SECTION("illegal account destruction")
+        {
+            // Can't delete an account with children
+            REQUIRE_THROWS_AS(ds->destroy_account(L"assets"), api::error);
+
+            // Can't delete an account that doesn't exist
+            REQUIRE_THROWS_AS(ds->destroy_account(L"abc"), api::error);
+        }   // end illegal account destruction section
+
     }   // end exception cases section
 
-///    FAIL("tests are incomplete");
 }   // end Sqlite Account Objects test

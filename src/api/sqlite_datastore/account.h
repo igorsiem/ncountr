@@ -145,24 +145,7 @@ class account : public api::account
      * 
      * This method should validates the Name using the `valid_name` method.
      */
-    virtual void set_name(std::wstring n) override
-    {
-        if (n == name()) return;    // No change
-
-        if (!valid_name(n))
-            throw error(tr("invalid Account name - ")
-                + QString::fromStdWString(n));
-
-        // Make sure that the new name will not violate uniqueness in the
-        // parent (or at the root, if there is no parent)
-        if (find_by_parent_id_and_name(
-                m_db, parent_id()
-                , QString::fromStdWString(n)) != boost::none)
-            throw error(tr("attempt to change Account Name to a Name that "
-                "is already taken"));
-
-        updateFieldValue("name", QString::fromStdWString(n));
-    }   // end set_name
+    virtual void set_name(std::wstring n) override;
 
     /**
      * \brief Split an account path string into an array of account names
@@ -201,25 +184,7 @@ class account : public api::account
      * Parent paths are always assumed to begin at the root, and do not start
      * with the `account_path_separator`.
      */
-    virtual std::wstring parent_path(void) const override
-    {
-
-        std::vector<std::wstring> path_names;
-        auto parent_id = retrieveFieldValue<QVariant>("parent_id");
-        while (parent_id.isNull() == false)
-        {
-            auto parent_rec = find_by_id(m_db, parent_id.toInt());
-            if (parent_rec == boost::none) parent_id = QVariant();
-            else
-            {
-                path_names.push_back(
-                    parent_rec->value("name").toString().toStdWString());
-                parent_id = parent_rec->value("parent_id");
-            }
-        }
-
-        return api::account::concatenate_path(path_names);
-    }   // end parent_path method
+    virtual std::wstring parent_path(void) const override;
 
     /**
      * \brief Set the Parent Account of the Account
@@ -235,48 +200,7 @@ class account : public api::account
      * \param parent The new Parent account; this may be `nullptr` to put the
      * Account at the root
      */
-    virtual void set_parent(api::account_spr parent) override
-    {
-
-        auto sql_parent = std::dynamic_pointer_cast<sqlite::account>(parent);
-        boost::optional<int> parent_id = boost::none;
-        if (sql_parent)
-        {
-            // Don't bother if the parent isn't changing
-            if (parent->full_path() == parent_path()) return;
-
-            // Ensure that the new parent has the same values for
-            // `has_running_balance` as we do.
-            if (has_running_balance() != parent->has_running_balance())
-                throw error(tr("an attempt was made to add a child with a "
-                    "Running Balance to a parent that does not have a "
-                    "Running Balance, or vice-versa"));
-
-            parent_id = sql_parent->id();   
-        }
-        else
-        {
-            // No parent - if there was no parent before, do nothing
-            if (parent_path().empty()) return;
-        }
-
-        // Whether we're setting a parent or moving the account to root, we
-        // want to make sure that there is not already something with the
-        // same name there.
-        if (find_by_parent_id_and_name(
-                m_db
-                , parent_id
-                , QString::fromStdWString(name())))
-            throw error(
-                tr("attempt to add set a Parent Account to an Account "
-                    "with a duplicate name, or move an Account to the root "
-                    "when another root Account has the same name"));
-
-        if (parent_id == boost::none)
-            updateFieldValue("parent_id", QVariant());
-        else updateFieldValue("parent_id", *parent_id);
-
-    }   // end set_parent method
+    virtual void set_parent(api::account_spr parent) override;
 
     /**
      * \brief Retrieve the Full Path of the Account
@@ -331,6 +255,10 @@ class account : public api::account
      * \brief Set up the Account to have a Running Balance, with an Opening
      * Date and Opening Balance
      * 
+     * This method enforces the Business Rule that an Account may have a
+     * Running Balance if -- and only if -- any Parent Account and all Child
+     * Accounts have a Running Balance.
+     * 
      * \param od The Opening Date of the Account
      * 
      * \param ob The Opening Balance of the Account
@@ -339,35 +267,17 @@ class account : public api::account
      */
     virtual void set_running_balance_true(
             ncountr::api::date od
-            , ncountr::api::currency_t ob) override
-    {
-///        // Can only do this if there are are no children or parent.
-///        if (parent_id() != boost::none)
-///            throw error(tr("attempt to add a running balance to an Account "
-///                "that is not at the root"));
-///
-///        
-///
-///        updateFieldValue("has_running_balance", true);
-///        updateFieldValue("opening_date", to_qdate(od).toJulianDay());
-///        updateFieldValue("opening_balance", ob);
-
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-
-    }
+            , ncountr::api::currency_t ob) override;
 
     /**
      * \brief Set the Account to have no Running Balance (i.e. to be an
      * Income or Expense Account)
      * 
-     * \todo Document business rules
+     * This method enforces the Business Rule that an Account may have a
+     * Running Balance if -- and only if -- any Parent Account and all Child
+     * Accounts have a Running Balance.
      */
-    virtual void set_running_balance_false(void) override
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+    virtual void set_running_balance_false(void) override;
 
     /**
      * \brief Retrieve the Opening Data (Opening Date and Opening Balance)
@@ -381,33 +291,7 @@ class account : public api::account
      * \todo Document business rules
      */
     virtual std::tuple<ncountr::api::date, ncountr::api::currency_t>
-    opening_data(void) const override
-    {
-        if (has_running_balance() == false)
-            throw error(tr("attempt to retrieve opening data for an account "
-                "that has no running balance - ") +
-                    QString::fromStdWString(full_path()));
-
-
-        return std::make_tuple(
-            to_api_date(
-                QDate::fromJulianDay(
-                    retrieveFieldValue<int>("opening_date")))
-            , retrieveFieldValue<double>("opening_balance"));
-
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }   // end opening_data
-
-///    /**
-///     * \brief Convert an Account Type enumerator to a human-readable QString
-///     */
-///    static QString to_qstring(type_t t);
-///
-///    /**
-///     * \brief Convert a human-readable QString to an Account Type enumerator
-///     */
-///    static type_t to_account_type(QString str);
+    opening_data(void) const override;
 
     // -- Lower-level Database Services --
 
@@ -464,7 +348,7 @@ class account : public api::account
      * 
      * \param description Human-readable description of the Account
      * 
-     * \param opening_data The opening date of the Account
+     * \param opening_date The opening date of the Account
      * 
      * \param opening_balance The opening balance of the Account
      */
@@ -543,13 +427,43 @@ class account : public api::account
         ,   boost::optional<int> parent_id
         , QString name);
 
+    /**
+     * \brief Run a generic `SELECT` query on the `account` table
+     * 
+     * \param query The query object, already linked to the database
+     * 
+     * \param selectClause The content of the `SELECT` clause (without the
+     * `SELECT` keyword)
+     * 
+     * \param whereClause The content of the `WHERE` clause (without the
+     * `WHERE` keyword); note that this may include bind parameters
+     * 
+     * \param bindings name/value pairs for bindings; may be empty
+     */
+    static void select(
+        QSqlQuery& query
+        , const QString& selectClause
+        , const QString& whereClause
+        , const std::map<QString, QVariant> bindings = {});
+
+    /**
+     * \brief Execute a `SELECT` query, with all field values (`SELECT *`)
+     * 
+     * \param query The query objects, linked to a database and ready to
+     * query
+     * 
+     * \param whereClause The content of the `WHERE` clause (without the
+     * `WHERE` keyword); note that this may include bind parameters
+     * 
+     * \param bindings name/value pairs for bindings; may be empty
+     */
     static void select(
         QSqlQuery& query
         , const QString& whereClause
         , const std::map<QString, QVariant> bindings = {});
 
     /**
-     * \brief Retrieve the value of a field in the record
+     * \brief Retrieve the value of a field in the Account record
      * 
      * \tparam T The type of the value
      * 
@@ -567,6 +481,15 @@ class account : public api::account
             , QString::fromStdString("id = {}"_format(m_id)));
     }   // end retrieveFieldValue method
 
+    /**
+     * \brief Update the value of a field in the Account record
+     * 
+     * \tparam T The type of the value
+     * 
+     * \param fieldName The name of the field in the `account` table
+     * 
+     * \param value The value to set
+     */
     template <typename T>
     void updateFieldValue(QString fieldName, T value)
     {

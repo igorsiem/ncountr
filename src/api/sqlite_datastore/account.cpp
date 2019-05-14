@@ -60,6 +60,24 @@ void account::initialise(QSqlDatabase& db)
 
 }   // end initialise method
 
+void account::set_name(std::wstring n)
+{
+    if (n == name()) return;    // No change
+    if (!valid_name(n))
+        throw error(tr("invalid Account name - ")
+            + QString::fromStdWString(n));
+
+    // Make sure that the new name will not violate uniqueness in the
+    // parent (or at the root, if there is no parent)
+    if (find_by_parent_id_and_name(
+            m_db, parent_id()
+            , QString::fromStdWString(n)) != boost::none)
+        throw error(tr("attempt to change Account Name to a Name that "
+            "is already taken"));
+
+    updateFieldValue("name", QString::fromStdWString(n));
+}   // end set_name method
+
 std::vector<QString> account::split_path(const QString& p)
 {
     std::vector<QString> result;
@@ -75,28 +93,143 @@ QString account::concatenate_path(const std::vector<QString>& p)
     for (auto n : p) std_p.push_back(n.toStdWString());
 
     return QString::fromStdWString(base_t::concatenate_path(std_p));
-}   // end  method
+}   // end concatenate_path method
 
-///QString account::to_qstring(type_t t)
-///{
-///    switch (t)
-///    {
-///        case type_t::asset: return tr("asset");
-///        case type_t::liability: return tr("liability");
-///        case type_t::income: return tr("income");
-///        case type_t::expense: return tr("expense");
-///        default: throw error(tr("unrecognised Account Type enumerator"));
-///    }
-///}   // end to_qstring method
-///
-///api::account::type_t account::to_account_type(QString str)
-///{
-///    if (str == tr("asset")) return type_t::asset;
-///    else if (str == tr("liability")) return type_t::liability;
-///    else if (str == tr("income")) return type_t::income;
-///    else if (str == tr("expense")) return type_t::expense;
-///    else throw error(tr("unrecognised Account Type - ") + str);
-///}   // end to_account_type method
+std::wstring account::parent_path(void) const
+{
+
+    std::vector<std::wstring> path_names;
+    auto parent_id = retrieveFieldValue<QVariant>("parent_id");
+    while (parent_id.isNull() == false)
+    {
+        auto parent_rec = find_by_id(m_db, parent_id.toInt());
+        if (parent_rec == boost::none) parent_id = QVariant();
+        else
+        {
+            path_names.push_back(
+                parent_rec->value("name").toString().toStdWString());
+            parent_id = parent_rec->value("parent_id");
+        }
+    }
+
+    return api::account::concatenate_path(path_names);
+    
+}   // end parent_path method
+
+void account::set_parent(api::account_spr parent)
+{
+
+    auto sql_parent = std::dynamic_pointer_cast<sqlite::account>(parent);
+    boost::optional<int> parent_id = boost::none;
+    if (sql_parent)
+    {
+        // Don't bother if the parent isn't changing
+        if (parent->full_path() == parent_path()) return;
+
+        // Ensure that the new parent has the same values for
+        // `has_running_balance` as we do.
+        if (has_running_balance() != parent->has_running_balance())
+            throw error(tr("an attempt was made to add a child with a "
+                "Running Balance to a parent that does not have a "
+                "Running Balance, or vice-versa"));
+
+        parent_id = sql_parent->id();   
+    }
+    else
+    {
+        // No parent - if there was no parent before, do nothing
+        if (parent_path().empty()) return;
+    }
+
+    // Whether we're setting a parent or moving the account to root, we
+    // want to make sure that there is not already something with the
+    // same name there.
+    if (find_by_parent_id_and_name(
+            m_db
+            , parent_id
+            , QString::fromStdWString(name())))
+        throw error(
+            tr("attempt to add set a Parent Account to an Account "
+                "with a duplicate name, or move an Account to the root "
+                "when another root Account has the same name"));
+
+    if (parent_id == boost::none)
+        updateFieldValue("parent_id", QVariant());
+    else updateFieldValue("parent_id", *parent_id);
+
+}   // end set_parent method
+
+void account::set_running_balance_true(
+            ncountr::api::date od
+            , ncountr::api::currency_t ob)
+{
+    // Can only do this if there are are no children or parent.
+    if (parent_id() != boost::none)
+        throw error(tr("attempt to add a running balance to an Account "
+            "that is not at the root"));
+
+    QSqlQuery query(m_db);
+    select(
+        query
+        , "COUNT(id) AS id_count"
+        , "parent_id = :parent_id"
+        , {{":parent_id", id()}});
+    if (query.next() == false)
+        throw(tr("attempt to count child Accounts failed"));
+
+    int child_count = query.value("id_count").toInt();
+
+    if (child_count > 0)
+        throw error(tr("attempt to add a running balance to an Account "
+            "that has children"));
+
+    updateFieldValue("has_running_balance", true);
+    updateFieldValue("opening_date", to_qdate(od).toJulianDay());
+    updateFieldValue("opening_balance", ob);
+}   // end set_running_balance_true method
+
+void account::set_running_balance_false(void)
+{
+    // Can only do this if there are are no children or parent.
+    if (parent_id() != boost::none)
+        throw error(tr("attempt to remove a running balance from an "
+            "Account that is not at the root"));
+
+    QSqlQuery query(m_db);
+    select(
+        query
+        , "COUNT(id) AS id_count"
+        , "parent_id = :parent_id"
+        , {{":parent_id", id()}});
+    if (query.next() == false)
+        throw(tr("attempt to count child Accounts failed"));
+
+    int child_count = query.value("id_count").toInt();
+
+    if (child_count > 0)
+        throw error(tr("attempt to remove a running balance from an "
+            "Account that has children"));
+
+    updateFieldValue("has_running_balance", false);
+    updateFieldValue("opening_date", QVariant());
+    updateFieldValue("opening_balance", QVariant());
+}   // end set_running_balance_false method
+
+std::tuple<ncountr::api::date, ncountr::api::currency_t>
+account::opening_data(void) const
+{
+    if (has_running_balance() == false)
+        throw error(tr("attempt to retrieve opening data for an account "
+            "that has no running balance - ") +
+                QString::fromStdWString(full_path()));
+
+    return std::make_tuple(
+        to_api_date(
+            QDate::fromJulianDay(
+                retrieveFieldValue<int>("opening_date")))
+        , retrieveFieldValue<double>("opening_balance"));
+
+}   // end opening_data
 
 int account::max_id(void) const
 {
@@ -331,22 +464,6 @@ void account::create_record(
 
 }   // end create_record
 
-///void account::create_record(
-///        QSqlDatabase& db
-///        , int id
-///        , QString full_path
-///        , boost::optional<QString> description
-///        , type_t t
-///        , ncountr::api::date od
-///        , ncountr::api::currency_t ob)
-///{
-//////    if (!db.isOpen())
-//////        throw error(tr("attempt to create a new Account record for a "
-//////            "Database that is not open"));
-///
-///    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
-///}
-
 boost::optional<QSqlRecord> account::find_by_id(
         QSqlDatabase& db
         , int id)
@@ -427,42 +544,68 @@ boost::optional<QSqlRecord> account::find_by_parent_id_and_name(
 
 void account::select(
         QSqlQuery& query
+        , const QString& selectClause
         , const QString& whereClause
         , const std::map<QString, QVariant> bindings)
 {
-    QString queryString = "SELECT * FROM account WHERE " + whereClause;
+    QString queryString =
+        "SELECT "
+        + selectClause
+        + " FROM account WHERE "
+        + whereClause;
     prepareAndExecute(query, queryString, bindings);
-}
+}   // end select method
+
+void account::select(
+        QSqlQuery& query
+        , const QString& whereClause
+        , const std::map<QString, QVariant> bindings)
+{
+    select(query, "*", whereClause, bindings);
+}   // end select method
 
 void account::destroy_record_by_id(QSqlDatabase& db, int id)
 {
-    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
 
-///    if (!db.isOpen())
-///        throw error(tr("attempt to destroy an Account record in a Database "
-///            "that is not open"));
-///
-///    QString queryString = "DELETE FROM account WHERE id = :id";
-///
+    if (!db.isOpen())
+        throw error(tr("attempt to destroy an Account record in a Database "
+            "that is not open"));
+
+    // Make sure account has no children
+    QSqlQuery query(db);
+    select(
+        query
+        , "COUNT(id) AS id_count"
+        , "parent_id = :parent_id"
+        , {{":parent_id", id}});
+    if (query.next() == false)
+        throw(tr("attempt to count child Accounts failed"));
+
+    int child_count = query.value("id_count").toInt();
+
+    if (child_count > 0)
+        throw error(tr("attempt to destroy an Account that has Children"));
+
+    QString queryString = "DELETE FROM account WHERE id = :id";
+
 ///    QSqlQuery query(db);
-///    prepareAndExecute(query, queryString, {{":id", id}});
-///
+    prepareAndExecute(query, queryString, {{":id", id}});
+
 }   // end destroy_record_by_id
 
 void account::destroy_record_by_full_path(
         QSqlDatabase& db, QString full_path)
 {
-///    if (!db.isOpen())
-///        throw error(tr("attempt to destroy an Account record in a Database "
-///            "that is not open"));
-///
-///    QString queryString = "DELETE FROM account WHERE full_path = :full_path";
-///
-///    QSqlQuery query(db);
-///    prepareAndExecute(query, queryString, {{":full_path", full_path}});
 
-    throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));
+    // Get the account object for its ID
+    auto rec = find_by_full_path(db, full_path);
+    if (rec == boost::none)
+        throw error(
+            tr("attempt to destroy an Account record that does not "
+                "exist - ") + full_path);
 
+    destroy_record_by_id(db, rec->value("id").toInt());
+    
 }   // end destroy_record_by_full_path method
 
 }}} // end ncountr::datastores::sqlite

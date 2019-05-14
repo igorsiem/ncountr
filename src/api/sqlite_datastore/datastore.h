@@ -154,6 +154,24 @@ class datastore : public api::datastore
 
     // -- Account-management --
 
+    /**
+     * \brief Create a new Running Balance Account in the Datastore
+     * 
+     * Non-balance Accounts are used for assets or liabilities, such as
+     * bank accounts, cash, loans or credit cards.
+     * 
+     * \param name The name of the Account; must be valid and unique under
+     * the Parent, or at the root
+     * 
+     * \param parent The Parent Account; if this is `nullptr`, the new
+     * Account will be at the Root; this *must* have a Running Balance
+     * 
+     * \param description A human-readable description of the Account
+     * 
+     * \param opening_date The Opening Date of the Account
+     * 
+     * \param opening_balance The Opening Balance of the Account
+     */
     virtual api::account_spr create_account(
         std::wstring name
         , api::account_spr parent
@@ -161,18 +179,62 @@ class datastore : public api::datastore
         , api::date opening_date
         , api::currency_t opening_balance) override;
 
+    /**
+     * \brief Create an Account (with no Running Balance)
+     * 
+     * Non-balance Accounts are categories for incoming or outgoing funds,
+     * such as salary, rent, groceries, bills and so on.
+     * 
+     * \param name The Name of the Account; this must be valid and unique
+     * under the Parent or at the root
+     * 
+     * \param parent The Parent Account; this also must have no Running
+     * Balance
+     * 
+     * \param description A human-readable description of the Account
+     */
     virtual api::account_spr create_account(
         std::wstring name
         , api::account_spr parent
         , std::wstring description) override;
 
+    /**
+     * \brief Retrieve an Account given its Full Path
+     * 
+     * \param full_path The Full Path of the Account to retrieve
+     * 
+     * \return The Account, or `nullptr` if there is no Account with the
+     * given Path
+     */
     virtual api::account_spr find_account(std::wstring full_path) override;
 
+    /**
+     * \brief Retrieve the Child Account of a given Account
+     * 
+     * \param parent The Parent Account
+     * 
+     * \return A map of (shared pointers to) the Child Accounts, indexed by
+     * Full Path
+     */
     virtual api::accounts_by_path_map find_children_of(
             api::const_account_spr parent) override;
 
+    /**
+     * \brief Retrieve the Child Account of a given Account
+     * 
+     * \param parent_full_path The Full Path of the Account whose children
+     * are to be retrieved
+     * 
+     * \return A map of (shared pointers to) the Child Accounts, indexed by
+     * Full Path
+     */
     virtual api::accounts_by_path_map find_children_of(
             std::wstring parent_full_path) override;
+
+    /**
+     * \brief Destroy an Account, given its Full Path
+     */
+    virtual void destroy_account(std::wstring full_path) override;
 
     /**
      * \brief Retrieve the version number for the underlying file format
