@@ -69,8 +69,12 @@ class account
     /**
      * \brief A shared pointer to an Account object
      */
-
     using account_spr = std::shared_ptr<account>;
+
+    /**
+     * \brief A shared pointer to a const Account object
+     */
+    using const_account_spr = std::shared_ptr<const account>;
 
     /**
      * \brief A collection of (shared pointers to) Accounts, indexed by their
@@ -152,15 +156,6 @@ class account
     virtual std::wstring full_path(void) const = 0;
 
     /**
-     * \brief Set the Full Path of the Account
-     * 
-     * The Full Path of the Account acts as a unique key for Accounts within
-     * a Datastore. Note that if the Account is at the root (i.e. the Parent
-     * Path is empty), then the Full Path is the same as the Account Name.
-     */
-    virtual void set_full_path(std::wstring p) = 0;
-
-    /**
      * \brief Retrieve the Account Description
      */
     virtual std::wstring description(void) const = 0;
@@ -169,53 +164,6 @@ class account
      * \brief Set the Account Description string
      */
     virtual void set_description(std::wstring d) = 0;
-
-///    /**
-///     * \brief Retrieve the account type enumerator (asset, liability, income
-///     * or expense)
-///     */
-///    virtual type_t account_type(void) const = 0;
-///
-///    /**
-///     * \brief Set the account type (for income and expense accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_account_type(type_t t) = 0;
-///
-///    /**
-///     * \brief Set the account type (for asset and liability accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_account_type(
-///        type_t t
-///        , date opening_date
-///        , currency_t opening_balance) = 0;
-///
-///    /**
-///     * \brief Retrieve the opening date (for asset and liability accounts)
-///     */
-///    virtual date opening_date(void) const = 0;
-///
-///    /**
-///     * \brief Set the opening date (for asset and liability accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_opening_date(date od) = 0;
-///
-///    /**
-///     * \brief Retrieve the opening balance (for asset and liability accounts)
-///     */
-///    virtual currency_t opening_balance(void) const = 0;
-///
-///    /**
-///     * \brief Set the opening balance (for asset and liability accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_opening_balance(currency_t ob) = 0;
 
     /**
      * \brief Whether or not the Account has a Running Balance
@@ -272,6 +220,11 @@ class account
  * \brief A shared pointer to an Account object
  */
 using account_spr = account::account_spr;
+
+/**
+ * \brief A shared pointer to a const Account object
+ */
+using const_account_spr = account::const_account_spr;
 
 /**
  * \brief A collection (shared pointers to) Accounts, indexed by the full

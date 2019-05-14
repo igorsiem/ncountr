@@ -551,7 +551,10 @@ TEST_CASE("sqlite account objects", "[unit]")
 
     api::account_spr expenses_ac = nullptr;
     REQUIRE_NOTHROW(
-        ds->create_account(L"expenses", nullptr, L"all expenses"));
+        expenses_ac = ds->create_account(
+                        L"expenses"
+                        , nullptr
+                        , L"all expenses"));
     REQUIRE_NOTHROW(
         ds->create_account(L"rent", expenses_ac, L"accommodation rental"));
     REQUIRE_NOTHROW(
@@ -562,6 +565,7 @@ TEST_CASE("sqlite account objects", "[unit]")
 
     SECTION("account retrieval")
     {
+        // Retrieve individual accounts
         auto ac = ds->find_account(L"assets");
         REQUIRE(ac);
         REQUIRE(ac->name() == L"assets");
@@ -581,31 +585,146 @@ TEST_CASE("sqlite account objects", "[unit]")
         REQUIRE(ac->has_running_balance());
         REQUIRE(ac->opening_data()
             == std::make_tuple(api::date(2010, 1, 1), 1000.0));
+
+        // Retrieve children
+        //
+        // Children at the root.
+        auto root_accounts = ds->find_children_of(L"");
+        REQUIRE(root_accounts.size() == 4);
+        REQUIRE(root_accounts.find(L"assets") != root_accounts.end());
+        REQUIRE(root_accounts.find(L"liabilities") != root_accounts.end());
+        REQUIRE(root_accounts.find(L"income") != root_accounts.end());
+        REQUIRE(root_accounts.find(L"expenses") != root_accounts.end());
+
+        // Children of asset accounts
+        auto asset_children = ds->find_children_of(L"assets");
+        REQUIRE(asset_children.size() == 2);
+        REQUIRE(asset_children.find(L"assets/bank") != asset_children.end());
+        REQUIRE(asset_children.find(L"assets/cash") != asset_children.end());
+
+        // Child accounts of accounts with no children
+        auto cash_children = ds->find_children_of(L"assets/cash");
+        REQUIRE(cash_children.size() == 0);
     }   // end account retrieval section
+
+    SECTION("field value updates")
+    {
+        // Update the assets account name to "all assets"
+        REQUIRE_NOTHROW(assets_ac->set_name(L"all assets"));
+
+        // It's name and full path have changed, and so have the full paths
+        // of descendents.
+        REQUIRE(assets_ac->name() == L"all assets");
+        REQUIRE(assets_ac->full_path() == L"all assets");
+
+        auto bank_ac = ds->find_account(L"all assets/bank");
+        REQUIRE(bank_ac);
+        REQUIRE(bank_ac->full_path() == L"all assets/bank");
+        auto cash_ac = ds->find_account(L"all assets/cash");
+        REQUIRE(cash_ac);
+        REQUIRE(cash_ac->full_path() == L"all assets/cash");
+
+        // Change back - everything is bank to normal
+        REQUIRE_NOTHROW(assets_ac->set_name(L"assets"));
+        
+        REQUIRE(assets_ac->name() == L"assets");
+        REQUIRE(assets_ac->full_path() == L"assets");
+        REQUIRE(bank_ac->full_path() == L"assets/bank");
+        REQUIRE(cash_ac->full_path() == L"assets/cash");
+
+        // Child rename
+        REQUIRE_NOTHROW(cash_ac->set_name(L"my cash"));
+        REQUIRE(cash_ac->name() == L"my cash");
+        REQUIRE(cash_ac->full_path() == L"assets/my cash");
+
+        REQUIRE_NOTHROW(cash_ac->set_name(L"cash"));
+        REQUIRE(cash_ac->name() == L"cash");
+        REQUIRE(cash_ac->full_path() == L"assets/cash");
+
+        // Changing parent
+        //
+        // Move rent to being an income account instead of an expense (the
+        // Full Path of the Child changes), and move it back again
+        auto rent_ac = ds->find_account(L"expenses/rent");
+        REQUIRE(rent_ac);
+        REQUIRE_NOTHROW(rent_ac->set_parent(income_ac));
+
+        REQUIRE(rent_ac->full_path() == L"income/rent");
+
+        REQUIRE_NOTHROW(rent_ac->set_parent(expenses_ac));
+        REQUIRE(rent_ac->full_path() == L"expenses/rent");
+
+        // Move rent to being a root account.
+        REQUIRE_NOTHROW(rent_ac->set_parent(nullptr));
+        REQUIRE(rent_ac->full_path() == L"rent");
+        REQUIRE(rent_ac->parent_path().empty());
+    }   // end field value updates
 
     SECTION("exception cases")
     {
-        // attempting to locate non-existent accounts
-        auto ac = ds->find_account(L"abc");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"abc/xyz");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"assets/abc");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"abc/assets");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"/abc");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"abc/");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"/");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"/assets");
-        REQUIRE(ac == nullptr);
-        ac = ds->find_account(L"assets/");
-        REQUIRE(ac == nullptr);
+        SECTION("locating non-existent records")
+        {
+            auto ac = ds->find_account(L"abc");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"abc/xyz");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"assets/abc");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"abc/assets");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"/abc");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"abc/");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"/");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"/assets");
+            REQUIRE(ac == nullptr);
+            ac = ds->find_account(L"assets/");
+            REQUIRE(ac == nullptr);
+        }   // end location non-existent records section
+
+        SECTION("locating children of non-existed records")
+        {
+            REQUIRE_THROWS_AS(ds->find_children_of(L"abc"), api::error);
+            REQUIRE_THROWS_AS(
+                ds->find_children_of(L"assets/abc")
+                , api::error);
+        }
+
+        SECTION("illegal Account naming")
+        {
+            // Invalid name
+            REQUIRE_THROWS_AS(assets_ac->set_name(L"abc/xyz"), api::error);
+
+            // Name is not unique at the root
+            REQUIRE_THROWS_AS(
+                assets_ac->set_name(L"liabilities")
+                , api::error);
+            
+            // Name is not unique as a child
+            auto cash_ac = ds->find_account(L"assets/cash");
+            REQUIRE_THROWS_AS(cash_ac->set_name(L"bank"), api::error);
+        }   // end illegal Account name section
+
+        SECTION("setting illegal parents")
+        {
+            // Setting cash under expenses
+            auto cash_ac = ds->find_account(L"assets/cash");
+            REQUIRE_THROWS_AS(cash_ac->set_parent(expenses_ac), api::error);
+
+            // Setting salary under liabilities
+            auto salary_ac = ds->find_account(L"income/salary");
+            REQUIRE_THROWS_AS(
+                salary_ac->set_parent(liabilities_ac), api::error);
+
+            // Attempt to move another "assets" account to the root.
+            salary_ac->set_name(L"assets");
+            REQUIRE_THROWS_AS(salary_ac->set_parent(nullptr), api::error);
+        }   // end setting illegal parents section
+
     }   // end exception cases section
 
 ///    FAIL("tests are incomplete");

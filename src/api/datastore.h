@@ -84,6 +84,11 @@ class datastore
 
     // -- Account-management --
 
+    /**
+     * \brief Create a new Account that has a Running Balance
+     * 
+     * \todo Expand this documentation
+     */
     virtual account_spr create_account(
         std::wstring name
         , account_spr parent
@@ -91,12 +96,26 @@ class datastore
         , date opening_date
         , currency_t opening_balance) = 0;
 
+    /**
+     * \brief Create a new Account that with no Running Balance
+     * 
+     * \todo Expand this documentation
+     */
     virtual account_spr create_account(
         std::wstring name
         , account_spr parent
         , std::wstring description) = 0;
 
+    /**
+     * \brief Find an Account, given its Full Path
+     */
     virtual account_spr find_account(std::wstring full_path) = 0;
+
+    virtual accounts_by_path_map find_children_of(
+        const_account_spr parent) = 0;
+
+    virtual accounts_by_path_map find_children_of(
+        std::wstring parent_full_path) = 0;
 
 };  // end datastore class
 

@@ -11,7 +11,6 @@
 
 #include <qlib/qlib.h>
 
-#include "account.h"
 #include "datastore.h"
 #include "db_utils.h"
 
@@ -160,6 +159,54 @@ api::account_spr datastore::find_account(std::wstring full_path)
             *m_db
             , rec->value("id").toInt());
 }   // end find_account method
+
+api::accounts_by_path_map datastore::find_children_of(
+            api::const_account_spr parent)
+{
+    // Either look for Account records with a parent ID set to the ID of the
+    // Parent Account, or with a NULL parent_id
+    QString whereClause = "parent_id IS NULL";
+    std::map<QString, QVariant> bindings;
+    if (parent)
+    {
+        whereClause = "parent_id = :parent_id";
+        bindings.insert(
+            std::make_pair(
+                ":parent_id"
+                , std::dynamic_pointer_cast<const account>(parent)->id()));
+    }
+
+    QSqlQuery query(*m_db);
+    account::select(query, whereClause, bindings);
+
+    api::accounts_by_path_map result;
+    while (query.next())
+    {
+        auto ac =
+            std::make_shared<account>(*m_db, query.value("id").toInt());
+        result.insert(std::make_pair(ac->full_path(), ac));
+    }
+
+    return result;
+}   //end find_children_of method
+
+api::accounts_by_path_map datastore::find_children_of(
+        std::wstring parent_full_path)
+{
+    if (parent_full_path.empty())
+        return find_children_of(api::const_account_spr(nullptr));
+    else
+    {
+        auto parent_ac = find_account(parent_full_path);
+        if (parent_ac == nullptr)
+            throw error(
+                tr("attempt to find children of a parent account that does "
+                    "not exist - ")
+                + QString::fromStdWString(parent_full_path));
+
+        return find_children_of(parent_ac);
+    }
+}   // end find_children_of
 
 int datastore::file_format_version(void) const
 {

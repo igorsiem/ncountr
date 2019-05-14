@@ -136,16 +136,33 @@ class account : public api::account
     /**
      * \brief Set the Name of the account
      * 
-     * The Account Name uniquely identifies the Account within all the
-     * Accounts under its parent, and implementations should check this.
+     * This method checks the following Business Rules:
+     * 
+     * 1. The new Account Name is valid
+     * 
+     * 2. The new Account Name is unique amongst the children of the Parent
+     *    Account (or at the root if the Account has no Parent)
      * 
      * This method should validates the Name using the `valid_name` method.
      */
     virtual void set_name(std::wstring n) override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+        if (n == name()) return;    // No change
+
+        if (!valid_name(n))
+            throw error(tr("invalid Account name - ")
+                + QString::fromStdWString(n));
+
+        // Make sure that the new name will not violate uniqueness in the
+        // parent (or at the root, if there is no parent)
+        if (find_by_parent_id_and_name(
+                m_db, parent_id()
+                , QString::fromStdWString(n)) != boost::none)
+            throw error(tr("attempt to change Account Name to a Name that "
+                "is already taken"));
+
+        updateFieldValue("name", QString::fromStdWString(n));
+    }   // end set_name
 
     /**
      * \brief Split an account path string into an array of account names
@@ -163,6 +180,17 @@ class account : public api::account
      * of `std::wstring`.
      */
     static QString concatenate_path(const std::vector<QString>& p);
+
+    /**
+     * \brief Retrieve the ID of the Parent Account record, or `boost::none`
+     * if the Account is at the root
+     */
+    boost::optional<int> parent_id(void) const
+    {
+        auto pid = retrieveFieldValue<QVariant>("parent_id");
+        if (pid.isNull()) return boost::none;
+        else return pid.toInt();
+    }
 
     /**
      * \brief Retrieve the full path of the Account that is the parent of
@@ -195,12 +223,60 @@ class account : public api::account
 
     /**
      * \brief Set the Parent Account of the Account
+     * 
+     * This method checks the following Business Rules
+     * 
+     * 1. IF a non-root Parent is being set THEN the new Parent must have
+     *    the same `has_running_balance` as self
+     * 
+     * 2. There must be no other Account with the same name as self under
+     *    the new Parent (or at the root, if moving to the root)
+     * 
+     * \param parent The new Parent account; this may be `nullptr` to put the
+     * Account at the root
      */
     virtual void set_parent(api::account_spr parent) override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }
+
+        auto sql_parent = std::dynamic_pointer_cast<sqlite::account>(parent);
+        boost::optional<int> parent_id = boost::none;
+        if (sql_parent)
+        {
+            // Don't bother if the parent isn't changing
+            if (parent->full_path() == parent_path()) return;
+
+            // Ensure that the new parent has the same values for
+            // `has_running_balance` as we do.
+            if (has_running_balance() != parent->has_running_balance())
+                throw error(tr("an attempt was made to add a child with a "
+                    "Running Balance to a parent that does not have a "
+                    "Running Balance, or vice-versa"));
+
+            parent_id = sql_parent->id();   
+        }
+        else
+        {
+            // No parent - if there was no parent before, do nothing
+            if (parent_path().empty()) return;
+        }
+
+        // Whether we're setting a parent or moving the account to root, we
+        // want to make sure that there is not already something with the
+        // same name there.
+        if (find_by_parent_id_and_name(
+                m_db
+                , parent_id
+                , QString::fromStdWString(name())))
+            throw error(
+                tr("attempt to add set a Parent Account to an Account "
+                    "with a duplicate name, or move an Account to the root "
+                    "when another root Account has the same name"));
+
+        if (parent_id == boost::none)
+            updateFieldValue("parent_id", QVariant());
+        else updateFieldValue("parent_id", *parent_id);
+
+    }   // end set_parent method
 
     /**
      * \brief Retrieve the Full Path of the Account
@@ -211,38 +287,17 @@ class account : public api::account
      */
     virtual std::wstring full_path(void) const override
     {
-
         auto pp = parent_path();
         if (pp.empty()) return name();
         else return pp + account_path_separator + name();
-
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
-
-    /**
-     * \brief Set the Full Path of the Account
-     * 
-     * The Full Path of the Account acts as a unique key for Accounts within
-     * a Datastore. Note that if the Account is at the root (i.e. the Parent
-     * Path is empty), then the Full Path is the same as the Account Name.
-     */
-    virtual void set_full_path(std::wstring p)
-    {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
-    }   // end set_full_path method
 
     /**
      * \brief Retrieve the Account Description
      */
     virtual std::wstring description(void) const override
     {
-
         return retrieveFieldValue<QString>("description").toStdWString();
-
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
@@ -250,84 +305,8 @@ class account : public api::account
      */
     virtual void set_description(std::wstring d) override
     {
-        throw error(
-            QString(__FUNCTION__) + tr(" function not implemented yet"));
+        updateFieldValue("description", QString::fromStdWString(d));
     }
-
-///    /**
-///     * \brief Retrieve the account type enumerator (asset, liability, income
-///     * or expense)
-///     */
-///    virtual type_t account_type(void) const override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
-///    }    
-///
-///    /**
-///     * \brief Set the account type (for income and expense accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_account_type(type_t t) override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
-///    }
-///
-///    /**
-///     * \brief Set the account type (for asset and liability accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_account_type(
-///            type_t t
-///            , ncountr::api::date opening_date
-///            , ncountr::api::currency_t opening_balance) override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-///    }
-///
-///    /**
-///     * \brief Retrieve the opening date (for asset and liability accounts)
-///     */
-///    virtual ncountr::api::date opening_date(void) const override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-///    }
-///
-///    /**
-///     * \brief Set the opening date (for asset and liability accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_opening_date(ncountr::api::date od) override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-///    }
-///
-///    /**
-///     * \brief Retrieve the opening balance (for asset and liability accounts)
-///     */
-///    virtual ncountr::api::currency_t opening_balance(void) const override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-///    }
-///
-///    /**
-///     * \brief Set the opening balance (for asset and liability accounts)
-///     * 
-///     * \todo Expand documentation about enforcing business rules
-///     */
-///    virtual void set_opening_balance(ncountr::api::currency_t ob) override
-///    {
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));        
-///    }
 
     /**
      * \brief Whether or not the Account has a Running Balance
@@ -346,8 +325,6 @@ class account : public api::account
     virtual bool has_running_balance(void) const override
     {
         return retrieveFieldValue<bool>("has_running_balance");
-///        throw error(
-///            QString(__FUNCTION__) + tr(" function not implemented yet"));
     }
 
     /**
@@ -364,8 +341,20 @@ class account : public api::account
             ncountr::api::date od
             , ncountr::api::currency_t ob) override
     {
+///        // Can only do this if there are are no children or parent.
+///        if (parent_id() != boost::none)
+///            throw error(tr("attempt to add a running balance to an Account "
+///                "that is not at the root"));
+///
+///        
+///
+///        updateFieldValue("has_running_balance", true);
+///        updateFieldValue("opening_date", to_qdate(od).toJulianDay());
+///        updateFieldValue("opening_balance", ob);
+
         throw error(
             QString(__FUNCTION__) + tr(" function not implemented yet"));
+
     }
 
     /**
@@ -554,6 +543,20 @@ class account : public api::account
         ,   boost::optional<int> parent_id
         , QString name);
 
+    static void select(
+        QSqlQuery& query
+        , const QString& whereClause
+        , const std::map<QString, QVariant> bindings = {});
+
+    /**
+     * \brief Retrieve the value of a field in the record
+     * 
+     * \tparam T The type of the value
+     * 
+     * \param fieldName The name of the file in the `account` table
+     * 
+     * \return The field value
+     */
     template <typename T>
     T retrieveFieldValue(QString fieldName) const
     {
@@ -563,6 +566,17 @@ class account : public api::account
             , fieldName
             , QString::fromStdString("id = {}"_format(m_id)));
     }   // end retrieveFieldValue method
+
+    template <typename T>
+    void updateFieldValue(QString fieldName, T value)
+    {
+        updateSingleRecordFieldValue(
+            m_db
+            , "account"
+            , fieldName
+            , value
+            , QString::fromStdString("id = {}"_format(m_id)));
+    }
 
     /**
      * \brief Destroy an Account record by its ID

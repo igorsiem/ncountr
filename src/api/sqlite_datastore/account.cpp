@@ -425,6 +425,15 @@ boost::optional<QSqlRecord> account::find_by_parent_id_and_name(
 
 }   // end find_by_parent_id_and_name method
 
+void account::select(
+        QSqlQuery& query
+        , const QString& whereClause
+        , const std::map<QString, QVariant> bindings)
+{
+    QString queryString = "SELECT * FROM account WHERE " + whereClause;
+    prepareAndExecute(query, queryString, bindings);
+}
+
 void account::destroy_record_by_id(QSqlDatabase& db, int id)
 {
     throw error(QString(__FUNCTION__) + tr(" function not implemented yet"));

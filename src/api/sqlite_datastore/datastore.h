@@ -24,6 +24,7 @@ using namespace fmt::literals;
 
 #include "../api.h"
 
+#include "account.h"
 #include "db_utils.h"
 #include "logging.h"
 
@@ -166,6 +167,12 @@ class datastore : public api::datastore
         , std::wstring description) override;
 
     virtual api::account_spr find_account(std::wstring full_path) override;
+
+    virtual api::accounts_by_path_map find_children_of(
+            api::const_account_spr parent) override;
+
+    virtual api::accounts_by_path_map find_children_of(
+            std::wstring parent_full_path) override;
 
     /**
      * \brief Retrieve the version number for the underlying file format
