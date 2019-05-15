@@ -10,11 +10,13 @@
  * or copy at https://www.boost.org/LICENSE_1_0.txt
  */
 
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSizePolicy>
 
 #include "../logging.h"
 #include "../mainwindow.h"
@@ -39,10 +41,25 @@ void MainWindow::setupUi(void)
 
 void MainWindow::setupCentralWidget(void)
 {
+    ui->centralWidget->setLayout(new QVBoxLayout());
 
-    QWidget* widget = ui->centralWidget;
+    auto docInfo =  createDocumentInformationWidget();
+    docInfo->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    ui->centralWidget->layout()->addWidget(docInfo);
 
-    widget->setLayout(new QVBoxLayout(ui->centralWidget));
+    auto leftRightSplitter = createLeftRightSplitter();
+    leftRightSplitter->setSizePolicy(
+        QSizePolicy::Preferred
+        , QSizePolicy::Expanding);
+    ui->centralWidget->layout()->addWidget(leftRightSplitter);
+
+}   // end setupCentralWidget method
+
+QWidget* MainWindow::createDocumentInformationWidget(void)
+{
+    auto docInfo = new QFrame(this);
+
+    docInfo->setLayout(new QVBoxLayout());
 
     m_nameFew = new TextFieldLineEdit(
         [this](void)
@@ -58,10 +75,10 @@ void MainWindow::setupCentralWidget(void)
                 , tr("attempted to set the Document Name, but no "
                     "document is open").toStdWString());
         }
-        , widget);
+        , docInfo);
 
     m_nameFew->setCanEdit(false);
-    widget->layout()->addWidget(m_nameFew);
+    docInfo->layout()->addWidget(m_nameFew);
 
     m_descriptionFew = new TextFieldLineEdit(
         [this](void)
@@ -77,9 +94,44 @@ void MainWindow::setupCentralWidget(void)
                 , tr("attempted to set the Document Description, but no "
                     "document is open").toStdWString());
         }
-        , widget);
+        , docInfo);
 
     m_descriptionFew->setCanEdit(false);
-    widget->layout()->addWidget(m_descriptionFew);
+    docInfo->layout()->addWidget(m_descriptionFew);
 
-}   // end setupCentralWidget method
+    return docInfo;
+}   // end createDocumentInformationWidget method
+
+QSplitter* MainWindow::createLeftRightSplitter(void)
+{
+    auto tempLeft = new QFrame(this), tempRight = new QFrame(this);
+    tempLeft->setFrameStyle(QFrame::Box);
+    tempRight->setFrameStyle(QFrame::Box);
+
+    auto splitter = new QSplitter(this);
+    splitter->addWidget(tempLeft);
+    splitter->addWidget(tempRight);
+
+    // Get widgt proportions set up, and make sure they are saved as well.
+    m_settings.beginGroup("MainWindow");
+    auto leftSize = m_settings.value("leftRightSplitterLeft", 50).toInt();
+    auto rightSize =
+        m_settings.value("leftRightSplitterRight", 1000).toInt();
+    m_settings.endGroup();
+    splitter->setSizes(QList<int>({leftSize, rightSize}));
+
+    connect(
+        splitter,
+        &QSplitter::splitterMoved,
+        [this, splitter](int, int)
+        {
+            // Splitter has moved - write its sizes to persistent storage
+            auto sizes = splitter->sizes();
+            m_settings.beginGroup("MainWindow");
+            m_settings.setValue("leftRightSplitterLeft", sizes[0]);
+            m_settings.setValue("leftRightSplitterRight", sizes[1]);
+            m_settings.endGroup();
+        });
+
+    return splitter;
+}   // end createLeftRightSplitter method

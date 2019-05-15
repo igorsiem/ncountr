@@ -11,10 +11,11 @@
 
 #include <QMainWindow>
 #include <QSettings>
+#include <QSplitter>
 
 #include "config.h"
 #include "document.h"
-#include "textfieldlineedit.h"
+#include "ui_components/textfieldlineedit.h"
 
 #ifndef _gui_mainwindow_h_installed
 #define _gui_mainwindow_h_installed
@@ -88,7 +89,25 @@ class MainWindow : public QMainWindow
      */
     void setupUi(void);
 
+    /**
+     * \brief Set up the User Interface in the central part of the Main
+     * Window
+     */
     void setupCentralWidget(void);
+
+    /**
+     * \brief Create a new Widget object containing the top-level Document
+     * Information fields (which are attributes of the MainWindow object)
+     */
+    QWidget* createDocumentInformationWidget(void);
+
+    /**
+     * \brief Create the left/right splitter component
+     * 
+     * This method sets up the main left-right splitter, and its child
+     * widgets
+     */
+    QSplitter* createLeftRightSplitter(void);
 
     // - Actions and Commands -
     //
