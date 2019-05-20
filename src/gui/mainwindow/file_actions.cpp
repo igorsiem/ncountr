@@ -17,7 +17,7 @@ using namespace fmt::literals;
 
 #include <qlib/qlib.h>
 
-#include "../error_handling.h"
+#include "../utils/error_handling.h"
 #include "../mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -62,14 +62,17 @@ void MainWindow::executeFileNewFile(void)
                     "not be deleted - ") + filePath).raise();
             }
 
-            // Can create the file now - if there is was a Document open
-            // before, we assume it will be closed cleanly by destructors.
-            //
-            // Note that we have to explicitly release the database before
-            // recreating it, so that connections are cleaned up before new
-            // ones are created.
-            m_document = nullptr;
+            // If there is a document open already, close it now.
+            if (m_document != nullptr)
+            {
+                documentBeforeClose();
+                m_document = nullptr;
+                documentAfterClose();
+            }
+
+            // Now we can create our new document
             m_document = std::move(Document::makeSqliteDocument(filePath));
+            documentAfterOpen();
 
             // Remember the path of the file for next time
             setLastDocumentFileUsed(filePath);
@@ -83,10 +86,10 @@ void MainWindow::executeFileNewFile(void)
             // Update UI
             ui->statusBar->showMessage(msg, 5000);
             setWindowTitleMessage(fi.baseName());
-            m_nameFew->updateFromField();
-            m_nameFew->setCanEdit(true);
-            m_descriptionFew->updateFromField();
-            m_descriptionFew->setCanEdit(true);
+///            m_nameFew->updateFromField();
+///            m_nameFew->setCanEdit(true);
+///            m_descriptionFew->updateFromField();
+///            m_descriptionFew->setCanEdit(true);
 
             // TODO set up other UI elements
 
@@ -123,14 +126,24 @@ void MainWindow::executeFileOpenFile(void)
                 Document::Error(tr("selected path is not a file (probably a "
                     "directory) - ")  + filePath).raise();
 
-            // Open the file - any existing document will be closed cleanly
-            // by destructors (we assume)
-            //
-            // Note that we have to explicitly release the database before
-            // recreating it, so that connections are cleaned up before new
-            // ones are created.
-            m_document = nullptr;
+///            // Open the file - any existing document will be closed cleanly
+///            // by destructors (we assume)
+///            //
+///            // Note that we have to explicitly release the database before
+///            // recreating it, so that connections are cleaned up before new
+///            // ones are created.
+///            m_document = nullptr;
+
+            // If there is a document open already, close it now.
+            if (m_document != nullptr)
+            {
+                documentBeforeClose();
+                m_document = nullptr;
+                documentAfterClose();
+            }
+
             m_document = std::move(Document::makeSqliteDocument(filePath));
+            documentAfterOpen();
 
             // Remember the path of the file for next time
             setLastDocumentFileUsed(filePath);
@@ -140,16 +153,9 @@ void MainWindow::executeFileOpenFile(void)
                 logging::level_t::debug
                 , msg.toStdWString());
 
-            // Update UI
             ui->statusBar->showMessage(msg, 5000);
             setWindowTitleMessage(fi.baseName());
-            m_nameFew->updateFromField();
-            m_nameFew->setCanEdit(true);
-            m_descriptionFew->updateFromField();
-            m_descriptionFew->setCanEdit(true);
-
-            // TODO set up other UI elements
-
+            
         }   // end if a file name was selected
 
     }
@@ -161,7 +167,13 @@ void MainWindow::executeFileCloseFile(void)
     ACTION_TRY
     {
 
-        m_document = nullptr;
+        if (m_document != nullptr)
+        {
+            documentBeforeClose();
+            m_document = nullptr;
+            documentAfterClose();
+        }
+
         QString msg = tr("document closed");
 
         logging::logger().log(
@@ -169,15 +181,7 @@ void MainWindow::executeFileCloseFile(void)
             , msg.toStdWString());
 
         ui->statusBar->showMessage(msg, 5000);
-
-        // Update UI
         setWindowTitleMessage();
-        m_nameFew->updateFromField();
-        m_nameFew->setCanEdit(false);
-        m_descriptionFew->updateFromField();
-        m_descriptionFew->setCanEdit(false);
-
-        // TODO clear other UI elements
 
     }
     ACTION_CATCH_DURING("Close File")

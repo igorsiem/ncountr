@@ -10,7 +10,7 @@
  */
 
 #include <qlib/qlib.h>
-#include "config.h"
+#include "../config.h"
 
 #ifndef _gui_logging_h_included
 #define _gui_logging_h_included

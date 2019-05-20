@@ -20,7 +20,7 @@ using namespace fmt::literals;
 #include <api/api.h>
 
 #include "config.h"
-#include "logging.h"
+#include "utils/error_handling.h"
 #include "mainwindow.h"
 
 /**

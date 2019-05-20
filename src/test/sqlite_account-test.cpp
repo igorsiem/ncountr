@@ -473,6 +473,101 @@ TEST_CASE("sqlite account table", "[unit]")
     
 }   // end Sqlite Account Table tests
 
+// Simple test that Accounts work as expected in actual files (as opposed to
+// in-memory databases)
+TEST_CASE("sqlite accounts in files", "[unit]")
+{
+    QString dbFilePath =
+        "test-output/sqlite_account-test-sqlite_account_in_files.db";
+
+    auto ds = std::make_unique<sql_ds::datastore>(dbFilePath);
+    ds->initialise();
+
+    // Account creation - 4 main accounts and 8 subaccounts
+    api::account_spr assets_ac = nullptr;
+    REQUIRE_NOTHROW(
+        assets_ac = ds->create_account(
+                L"assets"
+                , nullptr
+                , L"all assets"
+                , api::date(2010, 1, 1)
+                , 0.0));
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"bank"
+            , assets_ac
+            , L"savings account in bank"
+            , api::date(2010, 1, 1)
+            , 1000.0));
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"cash"
+            , assets_ac
+            , L"cash in hand"
+            , api::date(2010, 1, 1)
+            , 50));
+
+    api::account_spr liabilities_ac = nullptr;
+    REQUIRE_NOTHROW(liabilities_ac =
+        ds->create_account(
+            L"liabilities"
+            , nullptr
+            , L"all liabilities"
+            , api::date(2010, 1, 1)
+            , 0));
+
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"credit card"
+            , liabilities_ac
+            , L"credit card"
+            , api::date(2010, 1, 1)
+            , -100));
+
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"car loan"
+            , liabilities_ac
+            , L"loan for car"
+            , api::date(2010, 1, 1)
+            , -2000));
+
+    api::account_spr income_ac = nullptr;
+    REQUIRE_NOTHROW(
+        income_ac = ds->create_account(L"income", nullptr, L"all income"));
+    REQUIRE_NOTHROW(
+        ds->create_account(L"salary", income_ac, L"regular salary"));
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"contract work"
+            , income_ac
+            , L"income from side contracts"));
+
+    api::account_spr expenses_ac = nullptr;
+    REQUIRE_NOTHROW(
+        expenses_ac = ds->create_account(
+                        L"expenses"
+                        , nullptr
+                        , L"all expenses"));
+    REQUIRE_NOTHROW(
+        ds->create_account(L"rent", expenses_ac, L"accommodation rental"));
+    REQUIRE_NOTHROW(
+        ds->create_account(
+            L"groceries"
+            , expenses_ac
+            , L"food and essentials"));
+
+    // Verify that there are four base accounts
+    REQUIRE(
+        ds->find_children_of(ncountr::api::account_spr(nullptr)).size()
+        == 4);
+
+}   // end Sqlite Accounts in Files test
+
+// Detailed test of all the different expectations around Account objects
 TEST_CASE("sqlite account objects", "[unit]")
 {
     // Open a new Datastore, and initialise it.

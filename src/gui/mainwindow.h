@@ -12,9 +12,11 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <QSplitter>
+#include <QTreeView>
 
 #include "config.h"
 #include "document.h"
+#include "ui_components/accounttreemodel.h"
 #include "ui_components/textfieldlineedit.h"
 
 #ifndef _gui_mainwindow_h_installed
@@ -67,16 +69,45 @@ class MainWindow : public QMainWindow
 
     // --- Internal Declarations ---
 
-    // -- Event-handler Overrides --
+    // -- Event-handlers --
 
     protected:
 
+    // - Overrides of Event-handlers Declared in Base-class
+
     /**
-     * \brief Write window state and geometry to persistent storage
+     * \brief Handle shut-down actions, incuding writing window state and
+     * geometry to persistent storage
+     * 
+     * This method also closes the document (including calling
+     * `documentBeforeClose` and `documentAfterClose`)
      * 
      * \param event The event object (passed to base-class implementation) 
      */
     virtual void closeEvent(QCloseEvent *event) override;
+
+    // - Handlers of Events Specific to this Application
+
+    /**
+     * \brief Trigger actions that must be executed directly after a Document
+     * is opened (including creating a new Document)
+     * 
+     * When this method is called, `m_document` is guaranteed to be a valid
+     * object.
+     */
+    void documentAfterOpen(void);
+    
+    /**
+     * \brief Handle all clean-up actions that must take place directly
+     * before a Document is closed
+     */
+    void documentBeforeClose(void);
+
+    /**
+     * \brief Handle clean-up actions that must be executed immediately
+     * after a Document is closed
+     */
+    void documentAfterClose(void);
 
     private:
 
@@ -108,6 +139,8 @@ class MainWindow : public QMainWindow
      * widgets
      */
     QSplitter* createLeftRightSplitter(void);
+
+    void setupAccountTreeView(void);
 
     // - Actions and Commands -
     //
@@ -270,6 +303,8 @@ class MainWindow : public QMainWindow
 
     TextFieldLineEdit* m_nameFew; ///< Edit control for the Documet Name
     TextFieldLineEdit* m_descriptionFew;  ///< Editing for the Description
+
+    QTreeView* m_accountsTreeView;
 
 };  // end MainWindow class
 

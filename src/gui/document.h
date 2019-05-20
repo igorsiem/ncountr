@@ -12,13 +12,15 @@
 #include <memory>
 
 #include <QCoreApplication>
+#include <QDate>
 #include <QException>
 #include <QString>
 
 #include <qlib/qlib.h>
-#include <api/api.h>
+///#include <api/api.h>
 
-#include "error.h"
+#include "api.h"
+#include "utils/error.h"
 
 #ifndef _gui_document_h_installed
 #define _gui_document_h_installed
@@ -73,7 +75,7 @@ class Document final
      * 
      * \param datastore A unique pointer to the Datastore object
      */
-    explicit Document(ncountr::api::datastore_upr datastore);
+    explicit Document(Api::datastore_upr datastore);
 
     DECLARE_NO_MOVE_AND_COPY_SEMANTICS(Document)
 
@@ -107,20 +109,68 @@ class Document final
     /**
      *  \brief Set the Document Name
      */
-    virtual void setName(QString n)
+    void setName(QString n)
         { m_datastore->set_name(n.toStdWString()); }
 
     /**
      * \brief Retrieve the Document Description
      */
-    virtual QString description(void) const
+    QString description(void) const
         { return QString::fromStdWString(m_datastore->description()); }
 
     /**
      * \brief Set the Document Description string
      */
-    virtual void setDescription(QString d)
+    void setDescription(QString d)
         { m_datastore->set_description(d.toStdWString()); }
+
+    // -- Account Management Methods --
+
+    Api::account_spr createAccount(
+            QString name
+            , Api::account_spr parent
+            , QString description
+            , QDate openingDate
+            , double openingBalance)
+    {
+        return m_datastore->create_account(
+            name.toStdWString()
+            , parent
+            , description.toStdWString()
+            , Utils::toApiDate(openingDate)
+            , openingBalance);
+    }   // end createAccount method
+
+    Api::account_spr createAccount(
+            QString name
+            , Api::account_spr parent
+            , QString description)
+    {
+        return m_datastore->create_account(
+            name.toStdWString()
+            , parent
+            , description.toStdWString());
+    }   // end createAccount method
+
+    Api::account_spr findAccount(QString fullPath)
+    {
+        return m_datastore->find_account(fullPath.toStdWString());
+    }
+
+    Api::accounts_by_path_map findChildrenOf(Api::const_account_spr parent)
+    {
+        return m_datastore->find_children_of(parent);
+    }
+
+    Api::accounts_by_path_map findChildrenOf(QString fullPath)
+    {
+        return m_datastore->find_children_of(fullPath.toStdWString());
+    }
+
+    void destroyAccount(QString fullPath)
+    {
+        m_datastore->destroy_account(fullPath.toStdWString());
+    }
 
     // --- Internal Declarations ---
 
@@ -129,7 +179,7 @@ class Document final
     /**
      * \brief The underlying Datastore
      */
-    ncountr::api::datastore_upr m_datastore;
+    Api::datastore_upr m_datastore;
 
     Q_DECLARE_TR_FUNCTIONS(Document)
 

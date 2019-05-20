@@ -18,7 +18,7 @@
 #include <QPushButton>
 #include <QSizePolicy>
 
-#include "../logging.h"
+#include "../utils/logging.h"
 #include "../mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -104,13 +104,13 @@ QWidget* MainWindow::createDocumentInformationWidget(void)
 
 QSplitter* MainWindow::createLeftRightSplitter(void)
 {
-    auto tempLeft = new QFrame(this), tempRight = new QFrame(this);
-    tempLeft->setFrameStyle(QFrame::Box);
-    tempRight->setFrameStyle(QFrame::Box);
+    auto leftFrame = new QFrame(this), rightFrame = new QFrame(this);
+    leftFrame->setFrameStyle(QFrame::Box);
+    rightFrame->setFrameStyle(QFrame::Box);
 
     auto splitter = new QSplitter(this);
-    splitter->addWidget(tempLeft);
-    splitter->addWidget(tempRight);
+    splitter->addWidget(leftFrame);
+    splitter->addWidget(rightFrame);
 
     // Get widgt proportions set up, and make sure they are saved as well.
     m_settings.beginGroup("MainWindow");
@@ -133,5 +133,16 @@ QSplitter* MainWindow::createLeftRightSplitter(void)
             m_settings.endGroup();
         });
 
+    // Set up the contents of the frames
+    setupAccountTreeView();
+    leftFrame->setLayout(new QVBoxLayout(this));
+    leftFrame->layout()->addWidget(m_accountsTreeView);
+
     return splitter;
 }   // end createLeftRightSplitter method
+
+void MainWindow::setupAccountTreeView(void)
+{
+    m_accountsTreeView = new QTreeView(this);
+    // TODO look and feel stuff
+}
